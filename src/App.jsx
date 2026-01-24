@@ -1,6 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import logo from './assets/Kryptonaxlogo.png';
+// import logo from './assets/Kryptonaxlogo.png';
+import { useEffect } from "react";
+import ReactGA from "react-ga4";
+
+// 2. INITIALIZE IT RIGHT HERE (Outside the function)
+ReactGA.initialize("G-REEV9CZE52");
+
+function App() {
+
+  // 3. PASTE THIS INSIDE YOUR COMPONENT FUNCTION
+  useEffect(() => {
+    // This sends a signal to Google every time the page loads
+    ReactGA.send({ hitType: "pageview", page: window.location.pathname });
+  }, []);
+
+  return (
+    // ... Keep your existing code down here ...
+    <div className="App">
+       {/* Your Navbar, Routes, etc. */}
+    </div>
+  );
+}
+
 function App() {
   const [view, setView] = useState("dashboard");
   const [ticker, setTicker] = useState("");
