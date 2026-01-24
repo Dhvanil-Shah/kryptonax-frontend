@@ -90,7 +90,7 @@ function App() {
               // Send OTP
               if (!username) { setAuthError("Please enter your email."); return; }
               try {
-                  const res = await fetch("http://127.0.0.1:8000/forgot-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username}) });
+                  const res = await fetch("https://kryptonax-backend.onrender.com/forgot-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username}) });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.detail || "Error sending OTP");
                   setAuthSuccess("OTP Sent! Check your Email & Mobile.");
@@ -103,7 +103,7 @@ function App() {
               if (!otpCode || !password || !confirmPassword) { setAuthError("Fill all fields."); return; }
               if (password !== confirmPassword) { setAuthError("Passwords do not match."); return; }
               try {
-                  const res = await fetch("http://127.0.0.1:8000/reset-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, otp: otpCode, new_password: password}) });
+                  const res = await fetch("https://kryptonax-backend.onrender.com/reset-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, otp: otpCode, new_password: password}) });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.detail || "Reset failed");
                   setAuthSuccess("Password Reset! Please Login.");
@@ -119,7 +119,7 @@ function App() {
           if (password !== confirmPassword) { setAuthError("Passwords do not match!"); return; }
           if (!firstName || !lastName || !mobile) { setAuthError("Name and Mobile are required."); return; }
       }
-      const url = authMode === "login" ? "http://127.0.0.1:8000/token" : "http://127.0.0.1:8000/register";
+      const url = authMode === "login" ? "https://kryptonax-backend.onrender.com/token" : "https://kryptonax-backend.onrender.com/register";
       try {
           if (authMode === "register") {
              const payload = { username, password, first_name: firstName, last_name: lastName, mobile: mobile };
@@ -141,18 +141,18 @@ function App() {
   const logout = () => { setToken(null); setUserName(""); localStorage.removeItem("token"); localStorage.removeItem("userName"); setFavorites([]); };
   const handleReset = () => { setTicker(""); setSearchedTicker(""); setNews([]); setMergedData([]); setCurrentQuote(null); setCompareTicker(""); setActiveComparison(null); localStorage.removeItem("lastTicker"); setView("dashboard"); };
   const saveSearchHistory = (t) => { const newHistory = [t, ...searchHistory.filter(item => item !== t)].slice(0, 5); setSearchHistory(newHistory); localStorage.setItem("searchHistory", JSON.stringify(newHistory)); };
-  const fetchBatchQuotes = async (tickersList) => { if (!tickersList?.length) return; try { const res = await fetch(`http://127.0.0.1:8000/api/quotes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tickersList) }); const data = await res.json(); setPricesCache(prev => ({ ...prev, ...data })); } catch (e) {} };
-  const handleSearch = async (overrideTicker = null) => { const t = overrideTicker || ticker; if (!t) return; setShowSuggestions(false); setTicker(t); setSearchedTicker(t); setLoading(true); setNews([]); setMergedData([]); setActiveComparison(null); setCompareTicker(""); setCurrentQuote(null); localStorage.setItem("lastTicker", t); saveSearchHistory(t); setView("dashboard"); try { fetchQuote(t); const newsRes = await fetch(`http://127.0.0.1:8000/news/${t}?period=${timeRange}`); setNews(await newsRes.json()); setChartRange("1mo"); await updateChart(t, "1mo", null); } catch (error) { console.error(error); } setLoading(false); };
-  const fetchQuote = async (symbol) => { try { const res = await fetch(`http://127.0.0.1:8000/quote/${symbol}`); setCurrentQuote(await res.json()); } catch (e) {} };
-  const fetchHistoryData = async (symbol, range) => { try { const res = await fetch(`http://127.0.0.1:8000/history/${symbol}?period=${range}`); return await res.json(); } catch (e) { return {currency: "", data: []}; } };
+  const fetchBatchQuotes = async (tickersList) => { if (!tickersList?.length) return; try { const res = await fetch(`https://kryptonax-backend.onrender.com/api/quotes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tickersList) }); const data = await res.json(); setPricesCache(prev => ({ ...prev, ...data })); } catch (e) {} };
+  const handleSearch = async (overrideTicker = null) => { const t = overrideTicker || ticker; if (!t) return; setShowSuggestions(false); setTicker(t); setSearchedTicker(t); setLoading(true); setNews([]); setMergedData([]); setActiveComparison(null); setCompareTicker(""); setCurrentQuote(null); localStorage.setItem("lastTicker", t); saveSearchHistory(t); setView("dashboard"); try { fetchQuote(t); const newsRes = await fetch(`https://kryptonax-backend.onrender.com/news/${t}?period=${timeRange}`); setNews(await newsRes.json()); setChartRange("1mo"); await updateChart(t, "1mo", null); } catch (error) { console.error(error); } setLoading(false); };
+  const fetchQuote = async (symbol) => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/quote/${symbol}`); setCurrentQuote(await res.json()); } catch (e) {} };
+  const fetchHistoryData = async (symbol, range) => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/history/${symbol}?period=${range}`); return await res.json(); } catch (e) { return {currency: "", data: []}; } };
   const updateChart = async (mainSym, range, compSym) => { const mainRes = await fetchHistoryData(mainSym, range); setCurrency(mainRes.currency); let finalData = mainRes.data; if (compSym) { const compRes = await fetchHistoryData(compSym, range); const dataMap = new Map(); mainRes.data.forEach(item => dataMap.set(item.date, { date: item.date, price: item.price })); compRes.data.forEach(item => { if (dataMap.has(item.date)) dataMap.get(item.date).comparePrice = item.price; else dataMap.set(item.date, { date: item.date, comparePrice: item.price }); }); finalData = Array.from(dataMap.values()).sort((a,b) => a.date.localeCompare(b.date)); } setMergedData(finalData); };
   const handleComparisonSearch = async () => { if (!compareTicker) return; setActiveComparison(compareTicker); await updateChart(searchedTicker, chartRange, compareTicker); };
   const clearComparison = () => { setActiveComparison(null); setCompareTicker(""); updateChart(searchedTicker, chartRange, null); };
   const onSearchFocus = () => { setShowSuggestions(true); if (searchHistory.length > 0) fetchBatchQuotes(searchHistory); };
-  const fetchSuggestions = async (query, isFav = false) => { if (query.length < 2) { if (isFav) setFavSuggestions([]); else setSuggestions([]); return; } try { const res = await fetch(`http://127.0.0.1:8000/api/search/${query}`); const data = await res.json(); if (isFav) setFavSuggestions(data); else { setSuggestions(data); fetchBatchQuotes(data.map(s => s.symbol)); } } catch (e) { } };
-  const fetchTrending = async () => { try { const res = await fetch(`http://127.0.0.1:8000/trending`); setTrending(await res.json()); } catch (e) {} };
-  const fetchFavorites = async () => { try { const res = await fetch(`http://127.0.0.1:8000/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); if (res.ok) setFavorites(await res.json()); } catch (e) {} };
-  const toggleFavorite = async (t) => { if (!token) { setShowAuthModal(true); return; } if (!t) return; const isFav = favorites.some(f => f.ticker === t); const method = isFav ? "DELETE" : "POST"; await fetch(`http://127.0.0.1:8000/favorites/${t}`, { method, headers: { "Authorization": `Bearer ${token}` } }); fetchFavorites(); setNewFav(""); setShowFavSuggestions(false); };
+  const fetchSuggestions = async (query, isFav = false) => { if (query.length < 2) { if (isFav) setFavSuggestions([]); else setSuggestions([]); return; } try { const res = await fetch(`https://kryptonax-backend.onrender.com/api/search/${query}`); const data = await res.json(); if (isFav) setFavSuggestions(data); else { setSuggestions(data); fetchBatchQuotes(data.map(s => s.symbol)); } } catch (e) { } };
+  const fetchTrending = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/trending`); setTrending(await res.json()); } catch (e) {} };
+  const fetchFavorites = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); if (res.ok) setFavorites(await res.json()); } catch (e) {} };
+  const toggleFavorite = async (t) => { if (!token) { setShowAuthModal(true); return; } if (!t) return; const isFav = favorites.some(f => f.ticker === t); const method = isFav ? "DELETE" : "POST"; await fetch(`https://kryptonax-backend.onrender.com/favorites/${t}`, { method, headers: { "Authorization": `Bearer ${token}` } }); fetchFavorites(); setNewFav(""); setShowFavSuggestions(false); };
   const getBorderColor = (s) => (s === "positive" ? "4px solid #00e676" : s === "negative" ? "4px solid #ff1744" : "1px solid #651fff");
   const sentimentCounts = [ { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, { name: 'Negative', value: news.filter(n => n.sentiment === 'negative').length }, { name: 'Neutral', value: news.filter(n => n.sentiment === 'neutral' || !n.sentiment).length } ];
   const activeData = sentimentCounts.filter(item => item.value > 0);
