@@ -166,9 +166,9 @@ function App() {
   {/* LOGO IMAGE - Clickable to go to Dashboard */}
   <span onClick={() => setView("dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
     <img 
-      src={logo} 
-      alt="Kryptonax Logo" 
-      style={{ height: "50px", width: "auto", objectFit: "contain" }} 
+    src={logo} 
+    alt="Kryptonax Logo" 
+    style={{ height: "120px", width: "auto", objectFit: "contain" }} 
     />
   </span>
 
