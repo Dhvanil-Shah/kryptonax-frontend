@@ -165,11 +165,16 @@ function App() {
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
   {/* LOGO IMAGE - Clickable to go to Dashboard */}
   <span onClick={() => setView("dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-    <img 
-    src={logo} 
-    alt="Kryptonax Logo" 
-    style={{ height: "120px", width: "auto", objectFit: "contain" }} 
-    />
+   <img 
+  src={logo} 
+  alt="Kryptonax Logo" 
+  style={{ 
+    width: "280px",      /* Ideally big on Desktop */
+    maxWidth: "60vw",    /* On Mobile, never take more than 60% of the screen width */
+    height: "auto",      /* Maintain the correct shape */
+    objectFit: "contain" 
+  }} 
+/>
   </span>
 
   {/* BACK BUTTON (Only shows when searching) */}
