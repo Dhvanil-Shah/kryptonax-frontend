@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-
+import logo from './assets/Kryptonaxlogo.png';
 function App() {
   const [view, setView] = useState("dashboard");
   const [ticker, setTicker] = useState("");
@@ -161,7 +161,35 @@ function App() {
     <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
       <style>{styles}</style>
       <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
-        <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span></span>{searchedTicker && view === "dashboard" && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}</div>
+        {/* <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span></span>{searchedTicker && view === "dashboard" && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}</div> */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+  {/* LOGO IMAGE - Clickable to go to Dashboard */}
+  <span onClick={() => setView("dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+    <img 
+      src={logo} 
+      alt="Kryptonax Logo" 
+      style={{ height: "50px", width: "auto", objectFit: "contain" }} 
+    />
+  </span>
+
+  {/* BACK BUTTON (Only shows when searching) */}
+  {searchedTicker && view === "dashboard" && (
+    <button 
+      onClick={handleReset} 
+      style={{ 
+        fontSize: "14px", 
+        padding: "5px 15px", 
+        backgroundColor: "#2a2e39", 
+        border: "1px solid #787b86", 
+        color: "#d1d4dc", 
+        borderRadius: "4px", 
+        cursor: "pointer" 
+      }}
+    >
+      ← Back to Home
+    </button>
+  )}
+</div>
         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
