@@ -1,9 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import ReactGA from "react-ga4";
 
 // --- 1. INITIALIZE ANALYTICS ---
 ReactGA.initialize("G-REEV9CZE52");
+
+// --- NEW COMPONENT: Technical Sentiment Gauge ---
+const SentimentGauge = ({ data }) => {
+  // Simulated Technical Analysis Logic
+  const getTechnicalSentiment = () => {
+    if (!data || data.length < 30) return { score: 50, text: "Neutral", color: "#FFD700" }; // Need data
+    
+    const prices = data.map(d => d.price);
+    const currentPrice = prices[prices.length - 1];
+    const sma30 = prices.slice(-30).reduce((a, b) => a + b, 0) / 30;
+    const percentDiff = ((currentPrice - sma30) / sma30) * 100;
+
+    let score, text, color;
+    // Map percentage difference to a 0-100 score for the gauge
+    if (percentDiff > 5) { score = 90; text = "Strong Buy"; color = "#00e676"; }
+    else if (percentDiff > 1) { score = 75; text = "Buy"; color = "#69f0ae"; }
+    else if (percentDiff < -5) { score = 10; text = "Strong Sell"; color = "#ff1744"; }
+    else if (percentDiff < -1) { score = 25; text = "Sell"; color = "#ff5252"; }
+    else { score = 50; text = "Neutral"; color = "#FFD700"; }
+
+    return { score, text, color };
+  };
+
+  const { score, text, color } = getTechnicalSentiment();
+
+  // Gauge needle rotation calculation
+  const rotation = (score / 100) * 180 - 90; 
+
+  return (
+    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px' }}>
+      <h4 style={{ color: "#d1d4dc", marginBottom: "10px" }}>Technical Sentiment</h4>
+      
+      {/* Gauge Background SVG */}
+      <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%' }}>
+        {/* Arc Segments */}
+        <path d="M 20 100 A 80 80 0 0 1 60 30.7" fill="none" stroke="#ff1744" strokeWidth="12" strokeLinecap="round" /> {/* Strong Sell */}
+        <path d="M 65 28 A 80 80 0 0 1 100 20" fill="none" stroke="#ff5252" strokeWidth="12" strokeLinecap="round" />   {/* Sell */}
+        <path d="M 105 20 A 80 80 0 0 1 140 30.7" fill="none" stroke="#FFD700" strokeWidth="12" strokeLinecap="round" /> {/* Neutral */}
+        <path d="M 145 33 A 80 80 0 0 1 180 100" fill="none" stroke="#00e676" strokeWidth="12" strokeLinecap="round" />  {/* Buy/Strong Buy */}
+        
+        {/* Needle */}
+        <g transform={`rotate(${rotation}, 100, 100)`}>
+          <path d="M 100 100 L 100 35" stroke="white" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="100" cy="100" r="5" fill="white" />
+        </g>
+
+        {/* Central Text */}
+        <text x="100" y="85" textAnchor="middle" fill={color} fontSize="18" fontWeight="bold">{text}</text>
+        <text x="100" y="115" textAnchor="middle" fill="#787b86" fontSize="10">(Simulated Technicals)</text>
+
+        {/* Labels */}
+        <text x="25" y="115" textAnchor="middle" fill="#ff1744" fontSize="10">Strong Sell</text>
+        <text x="175" y="115" textAnchor="middle" fill="#00e676" fontSize="10">Strong Buy</text>
+      </svg>
+    </div>
+  );
+};
+
 
 function App() {
   // --- 2. ADD ANALYTICS TRACKING ---
@@ -182,16 +240,6 @@ function App() {
   const sentimentCounts = [ { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, { name: 'Negative', value: news.filter(n => n.sentiment === 'negative').length }, { name: 'Neutral', value: news.filter(n => n.sentiment === 'neutral' || !n.sentiment).length } ];
   const activeData = sentimentCounts.filter(item => item.value > 0);
 
-  // Helper for Prediction Logic
-  const getPrediction = () => {
-    const pos = sentimentCounts.find(s => s.name === 'Positive')?.value || 0;
-    const neg = sentimentCounts.find(s => s.name === 'Negative')?.value || 0;
-    if (pos > neg) return { text: "Price Likely to Rise", color: "#00e676", sub: "Bullish Sentiment Detected" };
-    if (neg > pos) return { text: "Price Likely to Fall", color: "#ff1744", sub: "Bearish Sentiment Detected" };
-    return { text: "Market Uncertain", color: "#651fff", sub: "Mixed Sentiment" };
-  };
-  const prediction = getPrediction();
-
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
       <style>{styles}</style>
@@ -272,7 +320,7 @@ function App() {
                             <span style={{ fontSize: "20px", fontWeight: "bold", color: currentQuote?.change >= 0 ? "#00e676" : "#ff1744" }}>{currentQuote?.change > 0 ? "+" : ""}{currentQuote?.change} ({currentQuote?.percent}%)</span> 
                         </div>
 
-                        {/* --- NEW 3-COLUMN LAYOUT START --- */}
+                        {/* --- 3-COLUMN LAYOUT START --- */}
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "20px" }}>
                             
                             {/* COLUMN 1: GRAPHS */}
@@ -286,18 +334,6 @@ function App() {
                                         <LineChart data={mergedData}> <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" /> <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> {activeComparison && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#ff9800"}} axisLine={false} tickLine={false} />} <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39", color: "#d1d4dc"}} /> <Line yAxisId="left" type="monotone" dataKey="price" name={searchedTicker} stroke="#2962ff" strokeWidth={2} dot={false} /> {activeComparison && <Line yAxisId="right" type="monotone" dataKey="comparePrice" name={activeComparison} stroke="#ff9800" strokeWidth={2} dot={false} />} </LineChart> 
                                     </ResponsiveContainer>
                                     <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "20px" }}> {['1d', '5d', '1mo', '6mo', '1y'].map(r => <button key={r} onClick={() => setChartRange(r)} style={{ padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: "bold", backgroundColor: chartRange === r ? "#2962ff" : "#2a2e39", color: chartRange === r ? "white" : "#787b86" }}>{r.toUpperCase()}</button>)} </div>
-                                </div>
-                                
-                                {/* Predictive Analysis Placeholder */}
-                                <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", position: "relative", overflow: "hidden" }}>
-                                     <h4 style={{ color: "#d1d4dc", marginBottom: "15px" }}>📈 Predictive Analysis (Beta)</h4>
-                                     <ResponsiveContainer width="100%" height={150}>
-                                        <AreaChart data={mergedData.slice(-10)}>
-                                            <defs><linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
-                                            <Area type="monotone" dataKey="price" stroke="#8884d8" fillOpacity={1} fill="url(#colorPv)" />
-                                        </AreaChart>
-                                     </ResponsiveContainer>
-                                     <div style={{position: "absolute", bottom: "10px", right: "10px", fontSize: "10px", color: "#787b86"}}>AI Projection Model v1.0</div>
                                 </div>
                             </div>
 
@@ -328,16 +364,12 @@ function App() {
                                     </div>
                                 </div>
                                 
-                                {/* AI Price Prediction Card */}
-                                <div style={{ backgroundColor: "#1e222d", padding: "30px", borderRadius: "4px", border: `2px solid ${prediction.color}`, textAlign: "center" }}>
-                                    <h4 style={{ color: "#d1d4dc", marginBottom: "10px", margin: 0 }}>AI Price Forecast</h4>
-                                    <h2 style={{ color: prediction.color, fontSize: "24px", marginTop: "15px", marginBottom: "5px" }}>{prediction.text}</h2>
-                                    <p style={{ color: "#787b86", fontSize: "13px" }}>{prediction.sub}</p>
-                                </div>
+                                {/* NEW Technical Sentiment Gauge */}
+                                <SentimentGauge data={mergedData} />
                             </div>
 
                         </div>
-                        {/* --- NEW 3-COLUMN LAYOUT END --- */}
+                        {/* --- 3-COLUMN LAYOUT END --- */}
                     </>
                 ) : (
                     <div>
