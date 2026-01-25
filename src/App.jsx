@@ -340,6 +340,11 @@ function App() {
   const fetchFavorites = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); if (res.ok) setFavorites(await res.json()); } catch (e) {} };
   const toggleFavorite = async (t) => { if (!token) { setShowAuthModal(true); return; } if (!t) return; const isFav = favorites.some(f => f.ticker === t); const method = isFav ? "DELETE" : "POST"; await fetch(`https://kryptonax-backend.onrender.com/favorites/${t}`, { method, headers: { "Authorization": `Bearer ${token}` } }); fetchFavorites(); setNewFav(""); setShowFavSuggestions(false); };
   const getBorderColor = (s) => (s === "positive" ? "4px solid #00e676" : s === "negative" ? "4px solid #ff1744" : "1px solid #651fff");
+  
+  // --- CRITICAL FIX: DEFINING VARIABLES ---
+  const filteredNews = news.filter(n => n.title.toLowerCase().includes(newsSearch.toLowerCase()));
+  const filteredGeneralNews = generalNews.filter(n => n.title.toLowerCase().includes(newsSearch.toLowerCase()));
+
   const sentimentCounts = [ { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, { name: 'Negative', value: news.filter(n => n.sentiment === 'negative').length }, { name: 'Neutral', value: news.filter(n => n.sentiment === 'neutral' || !n.sentiment).length } ];
   const activeData = sentimentCounts.filter(item => item.value > 0);
 
@@ -353,7 +358,7 @@ function App() {
         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
-      {/* --- AUTH MODAL (FIXED) --- */}
+      {/* --- AUTH MODAL --- */}
       {showAuthModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
             <div style={{ backgroundColor: "#1e222d", padding: "40px", borderRadius: "8px", border: "1px solid #2a2e39", width: "400px", textAlign: "center", position: "relative" }}>
@@ -402,6 +407,7 @@ function App() {
       ) : (
         <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
             
+            {/* SIDEBAR - NOW WITH WATCH LATER */}
             {!searchedTicker && (
                 <aside style={{ width: "300px", backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height: "fit-content" }}>
                     <h3 style={{ borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>⭐ My Watchlist</h3>
