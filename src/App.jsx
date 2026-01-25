@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine } from 'recharts';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, 
+  CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine 
+} from 'recharts';
 import ReactGA from "react-ga4";
 
-// --- 1. INITIALIZE ANALYTICS ---
+// --- CONFIGURATION ---
+const API_BASE_URL = "https://kryptonax-backend.onrender.com";
 ReactGA.initialize("G-REEV9CZE52");
 
 // --- ICONS ---
@@ -39,7 +43,7 @@ const Candle = (props) => {
 
 // --- HELPER: SIMULATE CANDLE DATA ---
 const simulateCandles = (data) => {
-    if (!data) return [];
+    if (!data || data.length === 0) return [];
     return data.map(d => {
         const close = d.price;
         const volatility = close * 0.02; 
@@ -52,7 +56,7 @@ const simulateCandles = (data) => {
 
 // --- HELPER: GENERATE UNIQUE PREDICTIONS ---
 const generateUniquePrediction = (historyData, ticker) => {
-    if (!historyData || historyData.length === 0) return [];
+    if (!historyData || historyData.length === 0 || !ticker) return [];
     let seed = 0;
     for (let i = 0; i < ticker.length; i++) seed += ticker.charCodeAt(i);
     
@@ -179,8 +183,6 @@ function App() {
   const [mobile, setMobile] = useState("");
   const [otpCode, setOtpCode] = useState(""); 
   
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
@@ -202,8 +204,12 @@ function App() {
   `;
 
   useEffect(() => {
-    document.body.style.margin = "0"; document.body.style.padding = "0"; document.body.style.backgroundColor = "#131722"; document.body.style.boxSizing = "border-box";
-    fetchTrending(); fetchGeneralNews();
+    document.body.style.margin = "0"; 
+    document.body.style.padding = "0"; 
+    document.body.style.backgroundColor = "#131722"; 
+    document.body.style.boxSizing = "border-box";
+    fetchTrending(); 
+    fetchGeneralNews();
     
     // Load local storage
     const savedWatchLater = localStorage.getItem("watchLaterNews");
@@ -211,22 +217,43 @@ function App() {
     const savedNotifs = localStorage.getItem("notifications");
     if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
 
-    if (token) { setIsAppLoading(true); fetchFavorites().finally(() => setIsAppLoading(false)); }
     const savedHistory = localStorage.getItem("searchHistory");
     if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
+    
+    // Auto load last ticker if exists
     const lastTicker = localStorage.getItem("lastTicker");
-    if (lastTicker) { setTicker(lastTicker); handleSearch(lastTicker); }
-  }, [token]);
+    if (lastTicker) { 
+        setTicker(lastTicker); 
+        handleSearch(lastTicker); 
+    }
+  }, []); // Run once on mount
 
-  useEffect(() => { if (!token) { const timer = setTimeout(() => setShowAuthModal(true), 2000); return () => clearTimeout(timer); } }, [token]);
+  useEffect(() => {
+      if (token) { 
+          setIsAppLoading(true); 
+          fetchFavorites().finally(() => setIsAppLoading(false)); 
+      } else {
+          // Optional: Prompt login after a delay if desired
+          // const timer = setTimeout(() => setShowAuthModal(true), 5000); 
+          // return () => clearTimeout(timer);
+      }
+  }, [token]);
 
   useEffect(() => {
     let interval = null;
-    if (searchedTicker && view === "dashboard") { interval = setInterval(() => { fetchQuote(searchedTicker); if (chartRange === "1d") updateChart(searchedTicker, "1d", activeComparison); }, 5000); }
+    if (searchedTicker && view === "dashboard") { 
+        // Polling for real-time updates
+        interval = setInterval(() => { 
+            fetchQuote(searchedTicker); 
+            if (chartRange === "1d") updateChart(searchedTicker, "1d", activeComparison); 
+        }, 10000); // Increased to 10s to reduce load
+    }
     return () => clearInterval(interval);
   }, [searchedTicker, chartRange, activeComparison, view]);
 
-  useEffect(() => { if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); }, [chartRange]); 
+  useEffect(() => { 
+      if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
+  }, [chartRange]); 
 
   // --- FEATURE HANDLERS ---
   const toggleWatchLater = (article) => {
@@ -237,115 +264,248 @@ function App() {
       setActiveMenu(null);
   };
 
-  const toggleNotification = async (t) => {
+const toggleNotification = async (t) => {
+      // 1. LOGIC FIX: User must be logged in to get email alerts
+      if (!token) {
+          setShowAuthModal(true);
+          return;
+      }
+
+      const isSubscribed = notifications.includes(t);
       let newNotifs;
-      if (notifications.includes(t)) {
+
+      if (isSubscribed) {
+          // --- UNSUBSCRIBE LOGIC (Fixed) ---
+          // Remove from local list
           newNotifs = notifications.filter(item => item !== t);
+          
+          // Call Backend to STOP emails
+          try {
+              await fetch(`${API_BASE_URL}/subscribe/${t}`, {
+                  method: "DELETE", // Standard REST practice for removing a resource
+                  headers: { "Authorization": `Bearer ${token}` }
+              });
+          } catch (e) { 
+              console.error("Unsubscribe failed", e); 
+              // Optional: Revert state if API fails
+              // setNotifications(notifications); 
+              // return;
+          }
       } else {
+          // --- SUBSCRIBE LOGIC ---
+          // Add to local list
           newNotifs = [...notifications, t];
-          // Call Backend
-          if (token) {
-              try {
-                  await fetch(`https://kryptonax-backend.onrender.com/subscribe/${t}`, {
-                      method: "POST",
-                      headers: { "Authorization": `Bearer ${token}` }
-                  });
-                  alert(`Alerts enabled for ${t}! Check your email.`);
-              } catch (e) { console.error("Sub failed", e); }
+          
+          // Call Backend to START emails
+          try {
+              await fetch(`${API_BASE_URL}/subscribe/${t}`, {
+                  method: "POST",
+                  headers: { "Authorization": `Bearer ${token}` }
+              });
+              alert(`Alerts enabled for ${t}! Check your email.`);
+          } catch (e) { 
+              console.error("Subscribe failed", e); 
           }
       }
+
+      // 2. Update State & Storage
       setNotifications(newNotifs);
       localStorage.setItem("notifications", JSON.stringify(newNotifs));
   };
 
   // --- API CALLS ---
-  const fetchGeneralNews = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/news/general`); setGeneralNews(await res.json()); } catch (e) {} };
+  const fetchGeneralNews = async () => { try { const res = await fetch(`${API_BASE_URL}/news/general`); setGeneralNews(await res.json()); } catch (e) { setGeneralNews([]); } };
+  
   const handleAuth = async () => {
       setAuthError(""); setAuthSuccess(""); setIsAppLoading(true);
       try {
+          // --- FORGOT PASSWORD FLOW ---
           if (authMode === "forgot") {
               if (forgotStep === 1) {
                   if (!username) throw new Error("Please enter your email.");
-                  const res = await fetch("https://kryptonax-backend.onrender.com/forgot-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username}) });
+                  const res = await fetch(`${API_BASE_URL}/forgot-password`, { 
+                      method: "POST", 
+                      headers: {"Content-Type": "application/json"}, 
+                      body: JSON.stringify({username}) 
+                  });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.detail || "Error sending OTP");
                   setAuthSuccess("OTP Sent! Check your Email & Mobile."); setForgotStep(2);
               } else if (forgotStep === 2) {
                   if (!otpCode || !password || !confirmPassword) throw new Error("Fill all fields.");
                   if (password !== confirmPassword) throw new Error("Passwords do not match.");
-                  const res = await fetch("https://kryptonax-backend.onrender.com/reset-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, otp: otpCode, new_password: password}) });
+                  const res = await fetch(`${API_BASE_URL}/reset-password`, { 
+                      method: "POST", 
+                      headers: {"Content-Type": "application/json"}, 
+                      body: JSON.stringify({username, otp: otpCode, new_password: password}) 
+                  });
                   if (!res.ok) throw new Error("Reset failed");
-                  setAuthSuccess("Password Reset! Please Login."); setTimeout(() => { setAuthMode("login"); setForgotStep(1); setAuthSuccess(""); setPassword(""); setOtpCode(""); }, 2000);
+                  setAuthSuccess("Password Reset! Please Login."); 
+                  setTimeout(() => { setAuthMode("login"); setForgotStep(1); setAuthSuccess(""); setPassword(""); setOtpCode(""); }, 2000);
               }
               setIsAppLoading(false); return;
           }
+
+          // --- LOGIN & REGISTER FLOW ---
           if (!username || !password) throw new Error("Please fill in all required fields.");
-          if (authMode === "register" && (password !== confirmPassword || !firstName || !mobile)) throw new Error("Check all fields.");
-          const url = authMode === "login" ? "https://kryptonax-backend.onrender.com/token" : "https://kryptonax-backend.onrender.com/register";
+          
           if (authMode === "register") {
+             if (password !== confirmPassword || !firstName || !mobile) throw new Error("Check all fields.");
              const payload = { username, password, first_name: firstName, last_name: lastName, mobile: mobile };
-             const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+             const res = await fetch(`${API_BASE_URL}/register`, { 
+                 method: "POST", 
+                 headers: { "Content-Type": "application/json" }, 
+                 body: JSON.stringify(payload) 
+             });
              if (!res.ok) throw new Error("Registration failed");
-             setAuthMode("login"); setAuthSuccess("Account created!"); 
+             setAuthMode("login"); setAuthSuccess("Account created! Please login."); 
           } else {
-              const formData = new FormData(); formData.append("username", username); formData.append("password", password);
-              const res = await fetch(url, { method: "POST", body: formData });
-              const data = await res.json();
-              if (!res.ok) throw new Error("Invalid Credentials");
-              setToken(data.access_token); setUserName(data.user_name);
-              localStorage.setItem("token", data.access_token); localStorage.setItem("userName", data.user_name);
-              setShowAuthModal(false); setUsername(""); setPassword("");
+             // LOGIN (Standard OAuth2 Form Data)
+             const formData = new FormData(); 
+             formData.append("username", username); 
+             formData.append("password", password);
+             const res = await fetch(`${API_BASE_URL}/token`, { method: "POST", body: formData });
+             const data = await res.json();
+             
+             if (!res.ok) throw new Error(data.detail || "Invalid Credentials");
+             
+             setToken(data.access_token); setUserName(data.user_name || username.split('@')[0]);
+             localStorage.setItem("token", data.access_token); 
+             localStorage.setItem("userName", data.user_name || username.split('@')[0]);
+             setShowAuthModal(false); setUsername(""); setPassword("");
           }
       } catch (e) { setAuthError(e.message); } finally { setIsAppLoading(false); }
   };
 
   const logout = () => { setToken(null); setUserName(""); localStorage.removeItem("token"); localStorage.removeItem("userName"); setFavorites([]); };
-  const handleReset = () => { setTicker(""); setSearchedTicker(""); setNews([]); setMergedData([]); setCurrentQuote(null); setCompareTicker(""); setActiveComparison(null); localStorage.removeItem("lastTicker"); setView("dashboard"); };
-  const saveSearchHistory = (t) => { const newHistory = [t, ...searchHistory.filter(item => item !== t)].slice(0, 5); setSearchHistory(newHistory); localStorage.setItem("searchHistory", JSON.stringify(newHistory)); };
-  const fetchBatchQuotes = async (tickersList) => { if (!tickersList?.length) return; try { const res = await fetch(`https://kryptonax-backend.onrender.com/api/quotes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tickersList) }); const data = await res.json(); setPricesCache(prev => ({ ...prev, ...data })); } catch (e) {} };
+  
+  const handleReset = () => { 
+      setTicker(""); setSearchedTicker(""); setNews([]); setMergedData([]); 
+      setCurrentQuote(null); setCompareTicker(""); setActiveComparison(null); 
+      localStorage.removeItem("lastTicker"); setView("dashboard"); 
+      setCandleData([]); setPredictiveData([]);
+  };
+
+  const saveSearchHistory = (t) => { 
+      if(!t) return;
+      const newHistory = [t, ...searchHistory.filter(item => item !== t)].slice(0, 5); 
+      setSearchHistory(newHistory); 
+      localStorage.setItem("searchHistory", JSON.stringify(newHistory)); 
+  };
+
+  const fetchBatchQuotes = async (tickersList) => { 
+      if (!tickersList?.length) return; 
+      try { 
+          const res = await fetch(`${API_BASE_URL}/api/quotes`, { 
+              method: "POST", 
+              headers: { "Content-Type": "application/json" }, 
+              body: JSON.stringify(tickersList) 
+          }); 
+          const data = await res.json(); 
+          setPricesCache(prev => ({ ...prev, ...data })); 
+      } catch (e) {} 
+  };
   
   const handleSearch = async (overrideTicker = null) => { 
       const t = overrideTicker || ticker; if (!t) return; 
-      setShowSuggestions(false); setTicker(t); setSearchedTicker(t); setLoading(true); setNews([]); setMergedData([]); setActiveComparison(null); setCompareTicker(""); setCurrentQuote(null); localStorage.setItem("lastTicker", t); saveSearchHistory(t); setView("dashboard"); 
+      setShowSuggestions(false); setTicker(t); setSearchedTicker(t); setLoading(true); 
+      setNews([]); setMergedData([]); setActiveComparison(null); setCompareTicker(""); 
+      setCurrentQuote(null); localStorage.setItem("lastTicker", t); saveSearchHistory(t); setView("dashboard"); 
+      
       try { 
-          fetchQuote(t); 
-          const newsRes = await fetch(`https://kryptonax-backend.onrender.com/news/${t}?period=${timeRange}`); 
-          setNews(await newsRes.json()); 
+          await fetchQuote(t); 
+          const newsRes = await fetch(`${API_BASE_URL}/news/${t}?period=${timeRange}`); 
+          const newsData = await newsRes.json();
+          setNews(Array.isArray(newsData) ? newsData : []); 
           setChartRange("1mo"); 
           await updateChart(t, "1mo", null); 
       } catch (error) { console.error(error); } 
       setLoading(false); 
   };
-  const fetchQuote = async (symbol) => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/quote/${symbol}`); setCurrentQuote(await res.json()); } catch (e) {} };
-  const fetchHistoryData = async (symbol, range) => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/history/${symbol}?period=${range}`); return await res.json(); } catch (e) { return {currency: "", data: []}; } };
+
+  const fetchQuote = async (symbol) => { 
+      try { 
+          const res = await fetch(`${API_BASE_URL}/quote/${symbol}`); 
+          if(res.ok) setCurrentQuote(await res.json()); 
+      } catch (e) {} 
+  };
+
+  const fetchHistoryData = async (symbol, range) => { 
+      try { 
+          const res = await fetch(`${API_BASE_URL}/history/${symbol}?period=${range}`); 
+          const json = await res.json();
+          return json.data ? json : {currency: "", data: []}; 
+      } catch (e) { return {currency: "", data: []}; } 
+  };
   
   const updateChart = async (mainSym, range, compSym) => { 
-      const mainRes = await fetchHistoryData(mainSym, range); setCurrency(mainRes.currency); 
-      let finalData = mainRes.data; 
+      const mainRes = await fetchHistoryData(mainSym, range); 
+      setCurrency(mainRes.currency); 
+      let finalData = mainRes.data || []; 
+      
       if (compSym) { 
           const compRes = await fetchHistoryData(compSym, range); 
-          const dataMap = new Map(); mainRes.data.forEach(item => dataMap.set(item.date, { date: item.date, price: item.price })); 
-          compRes.data.forEach(item => { if (dataMap.has(item.date)) dataMap.get(item.date).comparePrice = item.price; else dataMap.set(item.date, { date: item.date, comparePrice: item.price }); }); 
+          const dataMap = new Map(); 
+          finalData.forEach(item => dataMap.set(item.date, { date: item.date, price: item.price })); 
+          (compRes.data || []).forEach(item => { 
+              if (dataMap.has(item.date)) dataMap.get(item.date).comparePrice = item.price; 
+              else dataMap.set(item.date, { date: item.date, comparePrice: item.price }); 
+          }); 
           finalData = Array.from(dataMap.values()).sort((a,b) => a.date.localeCompare(b.date)); 
       } 
       setMergedData(finalData);
       setCandleData(simulateCandles(finalData)); 
       setPredictiveData(generateUniquePrediction(finalData, mainSym)); 
   };
-  const handleComparisonSearch = async () => { if (!compareTicker) return; setActiveComparison(compareTicker); await updateChart(searchedTicker, chartRange, compareTicker); };
-  const clearComparison = () => { setActiveComparison(null); setCompareTicker(""); updateChart(searchedTicker, chartRange, null); };
+
   const onSearchFocus = () => { setShowSuggestions(true); if (searchHistory.length > 0) fetchBatchQuotes(searchHistory); };
-  const fetchSuggestions = async (query, isFav = false) => { if (query.length < 2) { if (isFav) setFavSuggestions([]); else setSuggestions([]); return; } try { const res = await fetch(`https://kryptonax-backend.onrender.com/api/search/${query}`); const data = await res.json(); if (isFav) setFavSuggestions(data); else { setSuggestions(data); fetchBatchQuotes(data.map(s => s.symbol)); } } catch (e) { } };
-  const fetchTrending = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/trending`); setTrending(await res.json()); } catch (e) {} };
-  const fetchFavorites = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); if (res.ok) setFavorites(await res.json()); } catch (e) {} };
-  const toggleFavorite = async (t) => { if (!token) { setShowAuthModal(true); return; } if (!t) return; const isFav = favorites.some(f => f.ticker === t); const method = isFav ? "DELETE" : "POST"; await fetch(`https://kryptonax-backend.onrender.com/favorites/${t}`, { method, headers: { "Authorization": `Bearer ${token}` } }); fetchFavorites(); setNewFav(""); setShowFavSuggestions(false); };
+  
+  const fetchSuggestions = async (query, isFav = false) => { 
+      if (query.length < 2) { 
+          if (isFav) setFavSuggestions([]); else setSuggestions([]); 
+          return; 
+      } 
+      try { 
+          const res = await fetch(`${API_BASE_URL}/api/search/${query}`); 
+          const data = await res.json(); 
+          if (isFav) setFavSuggestions(data); 
+          else { 
+              setSuggestions(data); 
+              fetchBatchQuotes(data.map(s => s.symbol)); 
+          } 
+      } catch (e) { } 
+  };
+
+  const fetchTrending = async () => { try { const res = await fetch(`${API_BASE_URL}/trending`); setTrending(await res.json()); } catch (e) {} };
+  
+  const fetchFavorites = async () => { 
+      try { 
+          const res = await fetch(`${API_BASE_URL}/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); 
+          if (res.ok) setFavorites(await res.json()); 
+      } catch (e) {} 
+  };
+
+  const toggleFavorite = async (t) => { 
+      if (!token) { setShowAuthModal(true); return; } 
+      if (!t) return; 
+      const isFav = favorites.some(f => f.ticker === t); 
+      const method = isFav ? "DELETE" : "POST"; 
+      await fetch(`${API_BASE_URL}/favorites/${t}`, { method, headers: { "Authorization": `Bearer ${token}` } }); 
+      fetchFavorites(); setNewFav(""); setShowFavSuggestions(false); 
+  };
+
   const getBorderColor = (s) => (s === "positive" ? "4px solid #00e676" : s === "negative" ? "4px solid #ff1744" : "1px solid #651fff");
   
-  // --- CRITICAL FIX: DEFINING VARIABLES ---
-  const filteredNews = news.filter(n => n.title.toLowerCase().includes(newsSearch.toLowerCase()));
-  const filteredGeneralNews = generalNews.filter(n => n.title.toLowerCase().includes(newsSearch.toLowerCase()));
+  // --- DERIVED STATE ---
+  const filteredNews = useMemo(() => news.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [news, newsSearch]);
+  const filteredGeneralNews = useMemo(() => generalNews.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [generalNews, newsSearch]);
 
-  const sentimentCounts = [ { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, { name: 'Negative', value: news.filter(n => n.sentiment === 'negative').length }, { name: 'Neutral', value: news.filter(n => n.sentiment === 'neutral' || !n.sentiment).length } ];
+  const sentimentCounts = useMemo(() => [ 
+      { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, 
+      { name: 'Negative', value: news.filter(n => n.sentiment === 'negative').length }, 
+      { name: 'Neutral', value: news.filter(n => n.sentiment === 'neutral' || !n.sentiment).length } 
+  ], [news]);
+  
   const activeData = sentimentCounts.filter(item => item.value > 0);
 
   return (
