@@ -1,128 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine, ErrorBar } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine } from 'recharts';
 import ReactGA from "react-ga4";
 
 // --- 1. INITIALIZE ANALYTICS ---
 ReactGA.initialize("G-REEV9CZE52");
 
 // --- CUSTOM SHAPE: CANDLESTICK ---
-// This draws the "Wick" and "Body" of the candle
 const Candle = (props) => {
   const { x, y, width, height, low, high, open, close } = props;
   const isGreen = close > open;
   const color = isGreen ? "#00e676" : "#ff1744";
-  
-  // Calculate pixel positions for High/Low wicks based on the graph scaling
-  // Note: In a real custom shape, we map values to pixels. 
-  // For this simulation, we use the bar's internal logic which simplifies it.
   const yBottom = y + height;
   const yTop = y;
   
   return (
     <g stroke={color} fill={color} strokeWidth="2">
-      {/* Wick (Line from Low to High) - Simplified for visual demo */}
       <path d={`M ${x + width / 2},${yTop} L ${x + width / 2},${yBottom}`} />
-      {/* Body (Rect from Open to Close) */}
       <rect x={x} y={y + height * 0.25} width={width} height={height * 0.5} fill={color} stroke="none" />
     </g>
   );
 };
 
-// --- HELPER: SIMULATE CANDLE DATA (Since backend only gives Close price) ---
+// --- HELPER: SIMULATE CANDLE DATA ---
 const simulateCandles = (data) => {
     if (!data) return [];
     return data.map(d => {
         const close = d.price;
-        // Fake random volatility for the visual
         const volatility = close * 0.02; 
         const open = close + (Math.random() - 0.5) * volatility;
         const high = Math.max(open, close) + Math.random() * volatility;
         const low = Math.min(open, close) - Math.random() * volatility;
-        return { ...d, open, high, low, close, color: close > open ? "#00e676" : "#ff1744" };
+        return { ...d, open, high, low, close };
     });
 };
 
 // --- HELPER: GENERATE UNIQUE PREDICTIONS ---
 const generateUniquePrediction = (historyData, ticker) => {
     if (!historyData || historyData.length === 0) return [];
-    
-    // 1. Create a unique "Hash" from the ticker name
-    // This ensures BTC always gets the SAME prediction pattern, and AAPL gets a different one.
     let seed = 0;
     for (let i = 0; i < ticker.length; i++) seed += ticker.charCodeAt(i);
     
     const lastPoint = historyData[historyData.length - 1];
     let lastPrice = lastPoint.price;
     const futureData = [];
-    
-    // 2. Determine Trend based on Ticker Hash (Some go up, some go down)
     const trendDirection = (seed % 2 === 0) ? 1 : -1; 
-    const volatility = (seed % 5) / 100; // 0% to 5% volatility
-
-    // 3. Generate 15 Days of Future Data
+    
     let lastDate = new Date(lastPoint.date);
     for (let i = 1; i <= 15; i++) {
         const nextDate = new Date(lastDate);
         nextDate.setDate(lastDate.getDate() + 1);
-        
-        // Math: Sine wave + Trend Direction
         const wave = Math.sin(i * 0.5) * lastPrice * 0.02;
         const trend = i * lastPrice * 0.005 * trendDirection;
         const randomNoise = (Math.sin(seed * i) * lastPrice * 0.01);
-        
         const predictedPrice = lastPrice + wave + trend + randomNoise;
         
         futureData.push({
             date: nextDate.toISOString().split('T')[0],
             predicted: predictedPrice,
-            upper: predictedPrice * (1.05 + (i * 0.01)), // Funnel gets wider
+            upper: predictedPrice * (1.05 + (i * 0.01)), 
             lower: predictedPrice * (0.95 - (i * 0.01)),
             isPrediction: true
         });
-        lastDate = nextDate; // Increment date
+        lastDate = nextDate;
     }
-    
-    // Merge for chart
     const past = historyData.map(d => ({ ...d, predicted: d.price, upper: d.price, lower: d.price }));
     return [...past, ...futureData];
 };
 
-// --- NEW GAUGE: FLUID MATH (No Steps) ---
+// --- FLUID GAUGE ---
 const SentimentGauge = ({ data, newsCounts }) => {
   const getFluidSentiment = () => {
     if (!data || data.length < 5) return { rotation: 0, text: "Analyzing...", color: "#FFD700" };
-    
-    // 1. Price Momentum (Linear)
     const prices = data.map(d => d.price);
     const current = prices[prices.length - 1];
     const start = prices[0];
     const changePct = ((current - start) / start) * 100; 
-    
-    // 2. News Sentiment (Linear)
     const pos = newsCounts.find(n => n.name === 'Positive')?.value || 0;
     const neg = newsCounts.find(n => n.name === 'Negative')?.value || 0;
-    const newsScore = (pos - neg) * 2; // Each article adds/subtracts 2 points
-
-    // 3. Combine Score (-100 to +100)
-    // We map a +/- 5% price change to a full swing
+    const newsScore = (pos - neg) * 2; 
     let totalScore = (changePct * 10) + newsScore; 
-    
-    // 4. Clamp & Rotate
-    // Limit score between -90 (Max Sell) and +90 (Max Buy)
     const rotation = Math.max(-90, Math.min(90, totalScore * 3)); 
-
-    // 5. Determine Text
     let text = "Neutral", color = "#FFD700";
     if (rotation > 45) { text = "Strong Buy"; color = "#00e676"; }
     else if (rotation > 10) { text = "Buy"; color = "#69f0ae"; }
     else if (rotation < -45) { text = "Strong Sell"; color = "#ff1744"; }
     else if (rotation < -10) { text = "Sell"; color = "#ff5252"; }
-
     return { rotation, text, color };
   };
-
   const { rotation, text, color } = getFluidSentiment();
-
   return (
     <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <h4 style={{ color: "#d1d4dc", marginBottom: "0px" }}>Technical Analysis</h4>
@@ -131,19 +96,10 @@ const SentimentGauge = ({ data, newsCounts }) => {
         <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
         <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="url(#gradSell)" strokeWidth="15" strokeLinecap="round" />
         <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradBuy)" strokeWidth="15" strokeLinecap="round" />
-        
         <defs>
-            <linearGradient id="gradSell" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ff1744" />
-                <stop offset="100%" stopColor="#FFD700" />
-            </linearGradient>
-            <linearGradient id="gradBuy" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#FFD700" />
-                <stop offset="100%" stopColor="#00e676" />
-            </linearGradient>
+            <linearGradient id="gradSell" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#ff1744" /> <stop offset="100%" stopColor="#FFD700" /> </linearGradient>
+            <linearGradient id="gradBuy" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#FFD700" /> <stop offset="100%" stopColor="#00e676" /> </linearGradient>
         </defs>
-
-        {/* Needle */}
         <g transform={`rotate(${rotation}, 100, 100)`} style={{ transition: 'transform 0.5s ease-out' }}>
           <path d="M 100 100 L 100 25" stroke="white" strokeWidth="4" strokeLinecap="round" />
           <circle cx="100" cy="100" r="8" fill="#1e222d" stroke="white" strokeWidth="2" />
@@ -163,8 +119,8 @@ function App() {
   const [news, setNews] = useState([]);
   const [generalNews, setGeneralNews] = useState([]); 
   const [mergedData, setMergedData] = useState([]); 
-  const [candleData, setCandleData] = useState([]); // NEW FOR CANDLES
-  const [predictiveData, setPredictiveData] = useState([]); // NEW FOR PREDICTION
+  const [candleData, setCandleData] = useState([]); 
+  const [predictiveData, setPredictiveData] = useState([]); 
   const [currentQuote, setCurrentQuote] = useState(null); 
   const [currency, setCurrency] = useState("USD");
   const [loading, setLoading] = useState(false); 
@@ -242,7 +198,44 @@ function App() {
 
   // --- API CALLS ---
   const fetchGeneralNews = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/news/general`); setGeneralNews(await res.json()); } catch (e) {} };
-  const handleAuth = async () => { /* Auth Logic */ setAuthError(""); setAuthSuccess(""); setIsAppLoading(true); try { if (authMode === "forgot") { if (forgotStep === 1) { if (!username) throw new Error("Please enter your email."); const res = await fetch("https://kryptonax-backend.onrender.com/forgot-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username}) }); const data = await res.json(); if (!res.ok) throw new Error(data.detail || "Error sending OTP"); setAuthSuccess("OTP Sent! Check your Email & Mobile."); setForgotStep(2); } else if (forgotStep === 2) { if (!otpCode || !password || !confirmPassword) throw new Error("Fill all fields."); if (password !== confirmPassword) throw new Error("Passwords do not match."); const res = await fetch("https://kryptonax-backend.onrender.com/reset-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, otp: otpCode, new_password: password}) }); if (!res.ok) throw new Error("Reset failed"); setAuthSuccess("Password Reset! Please Login."); setTimeout(() => { setAuthMode("login"); setForgotStep(1); setAuthSuccess(""); setPassword(""); setOtpCode(""); }, 2000); } setIsAppLoading(false); return; } if (!username || !password) throw new Error("Please fill in all required fields."); if (authMode === "register" && (password !== confirmPassword || !firstName || !mobile)) throw new Error("Check all fields."); const url = authMode === "login" ? "https://kryptonax-backend.onrender.com/token" : "https://kryptonax-backend.onrender.com/register"; if (authMode === "register") { const payload = { username, password, first_name: firstName, last_name: lastName, mobile: mobile }; const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error("Registration failed"); setAuthMode("login"); setAuthSuccess("Account created!"); } else { const formData = new FormData(); formData.append("username", username); formData.append("password", password); const res = await fetch(url, { method: "POST", body: formData }); const data = await res.json(); if (!res.ok) throw new Error("Invalid Credentials"); setToken(data.access_token); setUserName(data.user_name); localStorage.setItem("token", data.access_token); localStorage.setItem("userName", data.user_name); setShowAuthModal(false); setUsername(""); setPassword(""); } } catch (e) { setAuthError(e.message); } finally { setIsAppLoading(false); } };
+  const handleAuth = async () => {
+      setAuthError(""); setAuthSuccess(""); setIsAppLoading(true);
+      try {
+          if (authMode === "forgot") {
+              if (forgotStep === 1) {
+                  if (!username) throw new Error("Please enter your email.");
+                  const res = await fetch("https://kryptonax-backend.onrender.com/forgot-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username}) });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.detail || "Error sending OTP");
+                  setAuthSuccess("OTP Sent! Check your Email & Mobile."); setForgotStep(2);
+              } else if (forgotStep === 2) {
+                  if (!otpCode || !password || !confirmPassword) throw new Error("Fill all fields.");
+                  if (password !== confirmPassword) throw new Error("Passwords do not match.");
+                  const res = await fetch("https://kryptonax-backend.onrender.com/reset-password", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, otp: otpCode, new_password: password}) });
+                  if (!res.ok) throw new Error("Reset failed");
+                  setAuthSuccess("Password Reset! Please Login."); setTimeout(() => { setAuthMode("login"); setForgotStep(1); setAuthSuccess(""); setPassword(""); setOtpCode(""); }, 2000);
+              }
+              setIsAppLoading(false); return;
+          }
+          if (!username || !password) throw new Error("Please fill in all required fields.");
+          if (authMode === "register" && (password !== confirmPassword || !firstName || !mobile)) throw new Error("Check all fields.");
+          const url = authMode === "login" ? "https://kryptonax-backend.onrender.com/token" : "https://kryptonax-backend.onrender.com/register";
+          if (authMode === "register") {
+             const payload = { username, password, first_name: firstName, last_name: lastName, mobile: mobile };
+             const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+             if (!res.ok) throw new Error("Registration failed");
+             setAuthMode("login"); setAuthSuccess("Account created!"); 
+          } else {
+              const formData = new FormData(); formData.append("username", username); formData.append("password", password);
+              const res = await fetch(url, { method: "POST", body: formData });
+              const data = await res.json();
+              if (!res.ok) throw new Error("Invalid Credentials");
+              setToken(data.access_token); setUserName(data.user_name);
+              localStorage.setItem("token", data.access_token); localStorage.setItem("userName", data.user_name);
+              setShowAuthModal(false); setUsername(""); setPassword("");
+          }
+      } catch (e) { setAuthError(e.message); } finally { setIsAppLoading(false); }
+  };
 
   const logout = () => { setToken(null); setUserName(""); localStorage.removeItem("token"); localStorage.removeItem("userName"); setFavorites([]); };
   const handleReset = () => { setTicker(""); setSearchedTicker(""); setNews([]); setMergedData([]); setCurrentQuote(null); setCompareTicker(""); setActiveComparison(null); localStorage.removeItem("lastTicker"); setView("dashboard"); };
@@ -274,8 +267,8 @@ function App() {
           finalData = Array.from(dataMap.values()).sort((a,b) => a.date.localeCompare(b.date)); 
       } 
       setMergedData(finalData);
-      setCandleData(simulateCandles(finalData)); // PREPARE CANDLES
-      setPredictiveData(generateUniquePrediction(finalData, mainSym)); // PREPARE PREDICTION
+      setCandleData(simulateCandles(finalData)); 
+      setPredictiveData(generateUniquePrediction(finalData, mainSym)); 
   };
   const handleComparisonSearch = async () => { if (!compareTicker) return; setActiveComparison(compareTicker); await updateChart(searchedTicker, chartRange, compareTicker); };
   const clearComparison = () => { setActiveComparison(null); setCompareTicker(""); updateChart(searchedTicker, chartRange, null); };
@@ -298,19 +291,41 @@ function App() {
         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
-      {/* AUTH MODAL */}
+      {/* --- AUTH MODAL (FIXED) --- */}
       {showAuthModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
             <div style={{ backgroundColor: "#1e222d", padding: "40px", borderRadius: "8px", border: "1px solid #2a2e39", width: "400px", textAlign: "center", position: "relative" }}>
-                <button onClick={() => {setShowAuthModal(false); setAuthMode("login");}} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "#787b86", fontSize: "20px", cursor: "pointer" }}>✕</button>
-                <h2 style={{ color: "white", marginTop: 0 }}>{authMode === "login" ? "Welcome Back" : "Join Kryptonax"}</h2>
+                <button onClick={() => {setShowAuthModal(false); setAuthMode("login"); setForgotStep(1);}} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "#787b86", fontSize: "20px", cursor: "pointer" }}>✕</button>
+                <h2 style={{ color: "white", marginTop: 0 }}>{authMode === "login" ? "Welcome Back" : authMode === "register" ? "Create Account" : "Reset Password"}</h2>
                 {authError && <p style={{color: "#ff1744", fontSize: "14px"}}>{authError}</p>}
                 {authSuccess && <p style={{color: "#00e676", fontSize: "14px"}}>{authSuccess}</p>}
-                <input type="text" placeholder="Username / Email" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} />
-                <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} />
-                {authMode === "register" && <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} />}
-                <button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginTop: "20px" }}>{authMode === "login" ? "Login" : "Sign Up"}</button>
-                <p style={{ fontSize: "12px", color: "#787b86", marginTop: "20px", cursor: "pointer" }} onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>{authMode === "login" ? "Create Account" : "Back to Login"}</p>
+                
+                {authMode === "forgot" ? (
+                    <>
+                        {forgotStep === 1 ? ( <><input type="text" placeholder="Email Address" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} /><button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginTop: "15px" }}>Send OTP</button></> ) : ( <><input type="text" placeholder="Enter 6-Digit OTP" value={otpCode} onChange={e => setOtpCode(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", textAlign: "center", letterSpacing: "5px", fontWeight: "bold" }} /><input type="password" placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} /><input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} /><button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginTop: "15px" }}>Reset Password</button></> )}
+                        <p style={{ fontSize: "12px", color: "#787b86", marginTop: "15px", cursor: "pointer" }} onClick={() => { setAuthMode("login"); setForgotStep(1); }}>Back to Login</p>
+                    </>
+                ) : (
+                    <>
+                        {authMode === "register" && ( 
+                            <>
+                                <div style={{display: "flex", gap: "10px"}}>
+                                    <input type="text" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} style={{ width: "50%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} />
+                                    <input type="text" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} style={{ width: "50%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} />
+                                </div>
+                                <input type="text" placeholder="Mobile Number" value={mobile} onChange={e => setMobile(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} />
+                            </>
+                        )}
+                        <input type="text" placeholder="Email (Username)" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px" }} />
+                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} />
+                        {authMode === "register" && <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ width: "95%", padding: "10px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white", borderRadius: "4px", marginTop: "5px" }} />}
+                        
+                        {authMode === "login" && <p style={{ fontSize: "12px", color: "#2962ff", cursor: "pointer", textAlign: "right", marginTop: "5px" }} onClick={() => { setAuthMode("forgot"); setAuthError(""); }}>Forgot Password?</p>}
+                        
+                        <button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginTop: "15px" }}>{authMode === "login" ? "Login" : "Sign Up"}</button>
+                        <p style={{ fontSize: "12px", color: "#787b86", marginTop: "20px", cursor: "pointer" }} onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAuthError(""); }}>{authMode === "login" ? "Don't have an account? Sign Up" : "Already have an account? Login"}</p>
+                    </>
+                )}
             </div>
         </div>
       )}
@@ -372,11 +387,10 @@ function App() {
                                             <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} />
                                             <YAxis domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} />
                                             <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39"}} labelStyle={{color: '#d1d4dc'}} />
-                                            {/* We use Bar with a custom shape to simulate a Candle */}
                                             <Bar dataKey="close" shape={<Candle />} />
                                         </ComposedChart>
                                     </ResponsiveContainer>
-                                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#787b86', marginTop: '10px' }}>*Candles are simulated for visual demo. Connect backend OHLC for precision.</div>
+                                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#787b86', marginTop: '10px' }}>*Candles are simulated for visual demo.</div>
                                 </div>
                                 
                                 {/* PREDICTIVE ANALYSIS GRAPH */}
@@ -395,15 +409,12 @@ function App() {
                                             <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: "#787b86"}} />
                                             <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39"}} labelStyle={{color: '#d1d4dc'}} />
                                             
-                                            {/* PREDICTION BANDS */}
                                             <Area type="monotone" dataKey="upper" stroke="none" fill="url(#bandGradient)" />
                                             <Line type="monotone" dataKey="predicted" stroke="#00e676" strokeWidth={2} dot={false} />
                                             <Line type="monotone" dataKey="upper" stroke="#00e676" strokeWidth={1} strokeDasharray="3 3" dot={false} opacity={0.5} />
                                             <Line type="monotone" dataKey="lower" stroke="#00e676" strokeWidth={1} strokeDasharray="3 3" dot={false} opacity={0.5} />
                                             
                                             <ReferenceLine x={predictiveData.find(d => d.isPrediction)?.date} stroke="#ff1744" strokeDasharray="3 3" label={{ value: 'TODAY', position: 'insideTopRight', fill: '#ff1744', fontSize: 10 }} />
-                                            
-                                            {/* ZOOM SLIDER (BRUSH) - Requested Feature */}
                                             <Brush dataKey="date" height={30} stroke="#2962ff" fill="#1e222d" tickFormatter={() => ''} />
                                         </ComposedChart>
                                      </ResponsiveContainer>
@@ -426,7 +437,6 @@ function App() {
 
                             {/* COLUMN 3: SENTIMENT */}
                             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                                {/* Sentiment Pie */}
                                 <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center" }}> 
                                     <h4 style={{ color: "#d1d4dc", marginBottom: "20px" }}>News Sentiment</h4> 
                                     <div style={{display: "flex", justifyContent: "center"}}>
@@ -436,7 +446,6 @@ function App() {
                                         </PieChart> 
                                     </div>
                                 </div>
-                                {/* NEW Technical Sentiment Gauge (NUANCED) */}
                                 <SentimentGauge data={mergedData} newsCounts={sentimentCounts} />
                             </div>
 
