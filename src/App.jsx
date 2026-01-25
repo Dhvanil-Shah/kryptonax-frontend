@@ -1,70 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import ReactGA from "react-ga4";
 
 // --- 1. INITIALIZE ANALYTICS ---
 ReactGA.initialize("G-REEV9CZE52");
 
-// --- NEW COMPONENT: Technical Sentiment Gauge ---
+// --- NEW COMPONENT: Technical Sentiment Gauge (More Sensitive) ---
 const SentimentGauge = ({ data }) => {
-  // Simulated Technical Analysis Logic
   const getTechnicalSentiment = () => {
-    if (!data || data.length < 30) return { score: 50, text: "Neutral", color: "#FFD700" }; // Need data
+    // 1. Safety Check: Need data to calculate
+    if (!data || data.length < 2) return { score: 50, text: "Analyzing...", color: "#FFD700" };
     
+    // 2. Extract Prices
     const prices = data.map(d => d.price);
     const currentPrice = prices[prices.length - 1];
-    const sma30 = prices.slice(-30).reduce((a, b) => a + b, 0) / 30;
-    const percentDiff = ((currentPrice - sma30) / sma30) * 100;
+    
+    // 3. Simple Moving Average (SMA) - Use all available data points
+    const sma = prices.reduce((a, b) => a + b, 0) / prices.length;
+    
+    // 4. Calculate Difference Percentage
+    const percentDiff = ((currentPrice - sma) / sma) * 100;
 
+    // 5. Determine Score (Lower thresholds for better responsiveness)
     let score, text, color;
-    // Map percentage difference to a 0-100 score for the gauge
-    if (percentDiff > 5) { score = 90; text = "Strong Buy"; color = "#00e676"; }
-    else if (percentDiff > 1) { score = 75; text = "Buy"; color = "#69f0ae"; }
-    else if (percentDiff < -5) { score = 10; text = "Strong Sell"; color = "#ff1744"; }
-    else if (percentDiff < -1) { score = 25; text = "Sell"; color = "#ff5252"; }
-    else { score = 50; text = "Neutral"; color = "#FFD700"; }
+    
+    // SENSITIVITY ADJUSTED: 
+    // > 2% diff = Strong Buy (Was 5%)
+    // > 0.5% diff = Buy (Was 1%)
+    if (percentDiff > 2.0) { score = 90; text = "Strong Buy"; color = "#00e676"; }
+    else if (percentDiff > 0.5) { score = 70; text = "Buy"; color = "#69f0ae"; }
+    else if (percentDiff < -2.0) { score = 10; text = "Strong Sell"; color = "#ff1744"; }
+    else if (percentDiff < -0.5) { score = 30; text = "Sell"; color = "#ff5252"; }
+    else { score = 50; text = "Neutral"; color = "#FFD700"; } // Between -0.5% and +0.5%
 
     return { score, text, color };
   };
 
   const { score, text, color } = getTechnicalSentiment();
-
-  // Gauge needle rotation calculation
   const rotation = (score / 100) * 180 - 90; 
 
   return (
-    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px' }}>
-      <h4 style={{ color: "#d1d4dc", marginBottom: "10px" }}>Technical Sentiment</h4>
+    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <h4 style={{ color: "#d1d4dc", marginBottom: "0px" }}>Technical Analysis</h4>
       
-      {/* Gauge Background SVG */}
-      <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%' }}>
-        {/* Arc Segments */}
-        <path d="M 20 100 A 80 80 0 0 1 60 30.7" fill="none" stroke="#ff1744" strokeWidth="12" strokeLinecap="round" /> {/* Strong Sell */}
-        <path d="M 65 28 A 80 80 0 0 1 100 20" fill="none" stroke="#ff5252" strokeWidth="12" strokeLinecap="round" />   {/* Sell */}
-        <path d="M 105 20 A 80 80 0 0 1 140 30.7" fill="none" stroke="#FFD700" strokeWidth="12" strokeLinecap="round" /> {/* Neutral */}
-        <path d="M 145 33 A 80 80 0 0 1 180 100" fill="none" stroke="#00e676" strokeWidth="12" strokeLinecap="round" />  {/* Buy/Strong Buy */}
+      <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+        {/* Gauge Background Segments - Added Glow Effect Filter */}
+        <defs>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+
+        <path d="M 20 100 A 80 80 0 0 1 60 30.7" fill="none" stroke="#ff1744" strokeWidth="10" strokeLinecap="round" filter="url(#glow)" opacity="0.8" /> 
+        <path d="M 65 28 A 80 80 0 0 1 100 20" fill="none" stroke="#ff5252" strokeWidth="10" strokeLinecap="round" />
+        <path d="M 105 20 A 80 80 0 0 1 140 30.7" fill="none" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" />
+        <path d="M 145 33 A 80 80 0 0 1 180 100" fill="none" stroke="#00e676" strokeWidth="10" strokeLinecap="round" filter="url(#glow)" opacity="0.8" />
         
         {/* Needle */}
-        <g transform={`rotate(${rotation}, 100, 100)`}>
-          <path d="M 100 100 L 100 35" stroke="white" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="5" fill="white" />
+        <g transform={`rotate(${rotation}, 100, 100)`} style={{ transition: 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          <path d="M 100 100 L 100 30" stroke="white" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="100" cy="100" r="6" fill="#2962ff" stroke="white" strokeWidth="2" />
         </g>
 
-        {/* Central Text */}
-        <text x="100" y="85" textAnchor="middle" fill={color} fontSize="18" fontWeight="bold">{text}</text>
-        <text x="100" y="115" textAnchor="middle" fill="#787b86" fontSize="10">(Simulated Technicals)</text>
-
-        {/* Labels */}
-        <text x="25" y="115" textAnchor="middle" fill="#ff1744" fontSize="10">Strong Sell</text>
-        <text x="175" y="115" textAnchor="middle" fill="#00e676" fontSize="10">Strong Buy</text>
+        {/* Text */}
+        <text x="100" y="80" textAnchor="middle" fill={color} fontSize="20" fontWeight="bold" style={{textShadow: `0 0 10px ${color}`}}>{text}</text>
+        <text x="100" y="115" textAnchor="middle" fill="#787b86" fontSize="11">Based on Moving Averages</text>
       </svg>
     </div>
   );
 };
 
-
 function App() {
-  // --- 2. ADD ANALYTICS TRACKING ---
   useEffect(() => {
     ReactGA.send({ hitType: "pageview", page: window.location.pathname });
   }, []);
@@ -159,11 +166,8 @@ function App() {
 
   // --- API CALLS ---
   const fetchGeneralNews = async () => { try { const res = await fetch(`https://kryptonax-backend.onrender.com/news/general`); setGeneralNews(await res.json()); } catch (e) {} };
-
-  // --- AUTH HANDLERS ---
   const handleAuth = async () => {
-      setAuthError(""); setAuthSuccess("");
-      setIsAppLoading(true);
+      setAuthError(""); setAuthSuccess(""); setIsAppLoading(true);
       try {
           if (authMode === "forgot") {
               if (forgotStep === 1) {
@@ -182,8 +186,7 @@ function App() {
                   setAuthSuccess("Password Reset! Please Login.");
                   setTimeout(() => { setAuthMode("login"); setForgotStep(1); setAuthSuccess(""); setPassword(""); setOtpCode(""); }, 2000);
               }
-              setIsAppLoading(false);
-              return;
+              setIsAppLoading(false); return;
           }
           if (!username || !password) throw new Error("Please fill in all required fields.");
           if (authMode === "register") {
@@ -243,7 +246,6 @@ function App() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
       <style>{styles}</style>
-      
       {(isAppLoading || loading) && ( <div className="loading-overlay"> <div className="spinner"></div> </div> )}
 
       <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
@@ -251,6 +253,8 @@ function App() {
         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
+      {/* MODALS AND ABOUT SECTION REMOVED FOR BREVITY IN CHAT DISPLAY, BUT KEEP THEM IN YOUR CODE IF YOU WANT THEM.
+          BELOW IS THE MAIN CONTENT STRUCTURE */}
       {showAuthModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
             <div style={{ backgroundColor: "#1e222d", padding: "40px", borderRadius: "8px", border: "1px solid #2a2e39", width: "400px", textAlign: "center", position: "relative" }}>
@@ -289,7 +293,7 @@ function App() {
       ) : (
         <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
             
-            {/* --- SIDEBAR HIDDEN WHEN SEARCHING --- */}
+            {/* SIDEBAR - HIDDEN WHEN SEARCHING */}
             {!searchedTicker && (
                 <aside style={{ width: "300px", backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height: "fit-content" }}>
                     <h3 style={{ borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>⭐ My Watchlist</h3>
@@ -331,7 +335,23 @@ function App() {
                                         <div style={{ display: "flex", gap: "5px" }}> {!activeComparison ? ( <><input type="text" placeholder="VS (e.g. GLD)" value={compareTicker} onChange={(e) => setCompareTicker(e.target.value.toUpperCase())} style={{ padding: "6px", border: "1px solid #2a2e39", borderRadius: "4px", backgroundColor: "#131722", color: "white", width: "100px" }} /><button onClick={handleComparisonSearch} style={{ padding: "6px 12px", background: "#2a2e39", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>VS</button></> ) : ( <button onClick={clearComparison} style={{ padding: "6px 12px", background: "#ff1744", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Clear {activeComparison}</button> )} </div> 
                                     </div> 
                                     <ResponsiveContainer width="100%" height={300}> 
-                                        <LineChart data={mergedData}> <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" /> <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> {activeComparison && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#ff9800"}} axisLine={false} tickLine={false} />} <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39", color: "#d1d4dc"}} /> <Line yAxisId="left" type="monotone" dataKey="price" name={searchedTicker} stroke="#2962ff" strokeWidth={2} dot={false} /> {activeComparison && <Line yAxisId="right" type="monotone" dataKey="comparePrice" name={activeComparison} stroke="#ff9800" strokeWidth={2} dot={false} />} </LineChart> 
+                                        {/* CHANGED TO AREA CHART FOR GLOW EFFECT */}
+                                        <AreaChart data={mergedData}> 
+                                            <defs>
+                                                <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#2962ff" stopOpacity={0.8}/>
+                                                <stop offset="95%" stopColor="#2962ff" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" opacity={0.5} /> 
+                                            <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> 
+                                            <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} /> 
+                                            {activeComparison && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#ff9800"}} axisLine={false} tickLine={false} />} 
+                                            <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39", color: "#d1d4dc"}} /> 
+                                            
+                                            <Area yAxisId="left" type="monotone" dataKey="price" name={searchedTicker} stroke="#2962ff" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" /> 
+                                            {activeComparison && <Area yAxisId="right" type="monotone" dataKey="comparePrice" name={activeComparison} stroke="#ff9800" strokeWidth={2} fillOpacity={0} />} 
+                                        </AreaChart> 
                                     </ResponsiveContainer>
                                     <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "20px" }}> {['1d', '5d', '1mo', '6mo', '1y'].map(r => <button key={r} onClick={() => setChartRange(r)} style={{ padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: "bold", backgroundColor: chartRange === r ? "#2962ff" : "#2a2e39", color: chartRange === r ? "white" : "#787b86" }}>{r.toUpperCase()}</button>)} </div>
                                 </div>
