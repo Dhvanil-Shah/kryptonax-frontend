@@ -760,7 +760,6 @@
 // export default App;
 
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, 
@@ -768,52 +767,25 @@ import {
 } from 'recharts';
 import ReactGA from "react-ga4";
 
-// --- CONFIGURATION ---
 const API_BASE_URL = "https://kryptonax-backend.onrender.com";
 ReactGA.initialize("G-REEV9CZE52");
 
 // --- ICONS ---
 const BellIcon = ({ active, onClick }) => (
-  <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={active ? "#FFD700" : "none"} stroke={active ? "#FFD700" : "#787b86"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'pointer', marginLeft: '10px', transition: 'all 0.2s' }}>
+  <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={active ? "#FFD700" : "none"} stroke={active ? "#FFD700" : "#787b86"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'pointer', marginLeft: '10px' }}>
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
   </svg>
 );
 
-// --- CHARTS & HELPERS ---
 const Candle = (props) => {
   const { x, y, width, height, close, open } = props;
   const isGreen = close > open;
   const color = isGreen ? "#00e676" : "#ff1744";
-  return (
-    <g stroke={color} fill={color} strokeWidth="2">
-      <path d={`M ${x + width / 2},${y} L ${x + width / 2},${y + height}`} />
-      <rect x={x} y={y} width={width} height={height} fill={color} stroke="none" />
-    </g>
-  );
-};
-
-const simulateCandles = (data) => {
-    if (!data || data.length === 0) return [];
-    return data.map(d => ({ ...d, open: d.price * 0.99, close: d.price, high: d.price * 1.01, low: d.price * 0.98 }));
-};
-
-const generatePrediction = (data) => {
-    if (!data.length) return [];
-    const last = data[data.length-1];
-    let price = last.price;
-    const future = [];
-    let date = new Date(last.date);
-    for(let i=1; i<=10; i++){
-        date.setDate(date.getDate()+1);
-        price = price * (1 + (Math.random() * 0.04 - 0.02));
-        future.push({ date: date.toISOString().split('T')[0], predicted: price, upper: price*1.05, lower: price*0.95, isPrediction: true });
-    }
-    return [...data.map(d=>({...d, predicted:d.price})), ...future];
+  return ( <g stroke={color} fill={color}><rect x={x} y={y} width={width} height={height} /></g> );
 };
 
 function App() {
-  // --- STATE ---
   const [view, setView] = useState("dashboard");
   const [ticker, setTicker] = useState("");
   const [searchedTicker, setSearchedTicker] = useState("");
@@ -824,8 +796,14 @@ function App() {
   const [currentQuote, setCurrentQuote] = useState(null);
   const [trending, setTrending] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [suggestions, setSuggestions] = useState([]); // RESTORED
+  const [showSuggestions, setShowSuggestions] = useState(false); // RESTORED
+  
+  // New Feature States
   const [moverRegion, setMoverRegion] = useState("all");
   const [newsCategory, setNewsCategory] = useState("all");
+
+  // Auth
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
@@ -833,7 +811,6 @@ function App() {
   const [password, setPassword] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-  // --- INIT ---
   useEffect(() => {
     fetchTrending(moverRegion);
     fetchGeneralNews(newsCategory);
@@ -843,40 +820,56 @@ function App() {
   useEffect(() => { fetchTrending(moverRegion); }, [moverRegion]);
   useEffect(() => { fetchGeneralNews(newsCategory); }, [newsCategory]);
 
-  // --- API ---
-  const fetchTrending = async (region) => {
-      try { const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); setTrending(await res.json()); } catch {}
-  };
-  const fetchGeneralNews = async (cat) => {
-      try { const res = await fetch(`${API_BASE_URL}/news/general?category=${cat}`); setGeneralNews(await res.json()); } catch {}
-  };
-  const fetchFavorites = async () => {
-      if(!token) return;
-      try { const res = await fetch(`${API_BASE_URL}/favorites`, {headers: {"Authorization": `Bearer ${token}`}}); setFavorites(await res.json()); } catch {}
+  const fetchTrending = async (region) => { try { const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); setTrending(await res.json()); } catch {} };
+  const fetchGeneralNews = async (cat) => { try { const res = await fetch(`${API_BASE_URL}/news/general?category=${cat}`); setGeneralNews(await res.json()); } catch {} };
+  const fetchFavorites = async () => { if(token) { const res = await fetch(`${API_BASE_URL}/favorites`, {headers: {"Authorization": `Bearer ${token}`}}); setFavorites(await res.json()); }};
+
+  // RESTORED: Real Search Suggestions
+  const fetchSuggestions = async (query) => {
+      if(query.length < 2) { setSuggestions([]); return; }
+      try {
+          const res = await fetch(`${API_BASE_URL}/api/search/${query}`);
+          setSuggestions(await res.json());
+      } catch {}
   };
 
   const handleSearch = async (t = ticker) => {
       if(!t) return;
+      setShowSuggestions(false);
       setSearchedTicker(t);
       try {
-          // 1. Quote
           const qRes = await fetch(`${API_BASE_URL}/quote/${t}`);
           setCurrentQuote(await qRes.json());
-          // 2. History
+          
           const hRes = await fetch(`${API_BASE_URL}/history/${t}`);
           const hData = await hRes.json();
-          setCandleData(simulateCandles(hData.data || []));
-          setPredictiveData(generatePrediction(hData.data || []));
-          // 3. Check Subscription
+          setCandleData(hData.data || []);
+          
+          // Generate Prediction Data locally for visuals
+          const data = hData.data || [];
+          if(data.length > 0) {
+             const last = data[data.length-1];
+             let price = last.price;
+             const future = [];
+             let date = new Date(last.date);
+             for(let i=1; i<=10; i++){
+                 date.setDate(date.getDate()+1);
+                 price = price * (1 + (Math.random() * 0.04 - 0.02));
+                 future.push({ date: date.toISOString().split('T')[0], predicted: price, upper: price*1.05, lower: price*0.95 });
+             }
+             setPredictiveData([...data.map(d=>({...d, predicted:d.price})), ...future]);
+          }
+
           if(favorites.some(f => f.ticker === t)) setIsSubscribed(true);
           else setIsSubscribed(false);
+          
       } catch {}
   };
 
-  const toggleSubscribe = async () => {
+  const toggleSubscribe = async (t = searchedTicker) => {
       if(!token) { setShowAuthModal(true); return; }
-      const method = isSubscribed ? "DELETE" : "POST";
-      await fetch(`${API_BASE_URL}/subscribe/${searchedTicker}`, {method, headers: {"Authorization": `Bearer ${token}`}});
+      const method = isSubscribed || favorites.some(f=>f.ticker===t) ? "DELETE" : "POST";
+      await fetch(`${API_BASE_URL}/subscribe/${t}`, {method, headers: {"Authorization": `Bearer ${token}`}});
       setIsSubscribed(!isSubscribed);
       fetchFavorites();
   };
@@ -898,13 +891,8 @@ function App() {
               localStorage.setItem("token", data.access_token);
               setShowAuthModal(false);
               fetchFavorites();
-          } else {
-              setAuthMode("login");
-              alert("Account created! Please login.");
-          }
-      } else {
-          alert("Auth failed");
-      }
+          } else { setAuthMode("login"); alert("Account created!"); }
+      } else { alert("Auth failed"); }
   };
 
   return (
@@ -912,109 +900,145 @@ function App() {
         
         {/* NAVBAR */}
         <nav style={{padding: "15px 30px", background: "#1e222d", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39"}}>
-            <h2 style={{margin:0, color: "#2962ff", cursor:"pointer"}} onClick={()=>{setSearchedTicker(""); setTicker("");}}>KRYPTONAX</h2>
-            {token ? <button onClick={()=>{setToken(null); localStorage.clear();}} style={{background:"#ff1744", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px"}}>Logout</button> 
-                   : <button onClick={()=>setShowAuthModal(true)} style={{background:"#2962ff", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px"}}>Login</button>}
+            <div style={{display:"flex", gap:"20px", alignItems:"center"}}>
+                <h2 style={{margin:0, color: "#2962ff", cursor:"pointer"}} onClick={()=>{setSearchedTicker(""); setTicker(""); setView("dashboard");}}>KRYPTONAX</h2>
+                {searchedTicker && <button onClick={()=>{setSearchedTicker(""); setTicker("");}} style={{background:"#2a2e39", border:"1px solid #787b86", color:"white", padding:"5px 10px", borderRadius:"4px", cursor:"pointer"}}>Back</button>}
+            </div>
+            <div style={{display:"flex", alignItems:"center", gap:"20px"}}>
+                {/* RESTORED ABOUT US */}
+                <span onClick={()=>setView("about")} style={{cursor:"pointer", color: view==="about"?"#2962ff":"#d1d4dc"}}>About Us</span>
+                {token ? <button onClick={()=>{setToken(null); localStorage.clear();}} style={{background:"#ff1744", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px", cursor:"pointer"}}>Logout</button> 
+                       : <button onClick={()=>setShowAuthModal(true)} style={{background:"#2962ff", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px", cursor:"pointer"}}>Login</button>}
+            </div>
         </nav>
 
         {/* AUTH MODAL */}
         {showAuthModal && (
             <div style={{position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.8)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:1000}}>
-                <div style={{background:"#1e222d", padding:"30px", borderRadius:"8px", width:"300px"}}>
+                <div style={{background:"#1e222d", padding:"30px", borderRadius:"8px", width:"300px", border:"1px solid #2a2e39"}}>
                     <h3 style={{color:"white"}}>{authMode.toUpperCase()}</h3>
-                    <input style={{width:"100%", padding:"10px", marginBottom:"10px"}} placeholder="Email" onChange={e=>setUsername(e.target.value)}/>
-                    <input style={{width:"100%", padding:"10px", marginBottom:"10px"}} type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)}/>
-                    <button style={{width:"100%", padding:"10px", background:"#2962ff", color:"white", border:"none"}} onClick={handleAuth}>Submit</button>
+                    <input style={{width:"90%", padding:"10px", marginBottom:"10px", background:"#131722", border:"1px solid #2a2e39", color:"white"}} placeholder="Email" onChange={e=>setUsername(e.target.value)}/>
+                    <input style={{width:"90%", padding:"10px", marginBottom:"10px", background:"#131722", border:"1px solid #2a2e39", color:"white"}} type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)}/>
+                    <button style={{width:"100%", padding:"10px", background:"#2962ff", color:"white", border:"none", cursor:"pointer"}} onClick={handleAuth}>Submit</button>
                     <p style={{marginTop:"10px", cursor:"pointer", color:"#787b86"}} onClick={()=>setAuthMode(authMode==="login"?"register":"login")}>Switch to {authMode==="login"?"Sign Up":"Login"}</p>
-                    <button style={{marginTop:"10px", background:"none", border:"none", color:"red"}} onClick={()=>setShowAuthModal(false)}>Close</button>
+                    <button style={{marginTop:"10px", background:"none", border:"none", color:"#ff1744", cursor:"pointer"}} onClick={()=>setShowAuthModal(false)}>Close</button>
                 </div>
             </div>
         )}
 
-        <div style={{display: "flex", maxWidth: "1600px", margin: "20px auto", gap: "20px", padding: "0 20px"}}>
-            
-            {/* LEFT SIDEBAR */}
-            {!searchedTicker && (
-            <aside style={{width: "300px", background: "#1e222d", padding: "20px", borderRadius: "8px", height: "fit-content"}}>
-                <div style={{display:"flex", justifyContent:"space-between", marginBottom:"15px"}}>
-                    <span style={{color:"white", fontWeight:"bold"}}>Top Movers</span>
-                    <div>
-                        {['all','in','us'].map(r=><button key={r} onClick={()=>setMoverRegion(r)} style={{background: moverRegion===r?"#2962ff":"#2a2e39", color:"white", border:"none", marginLeft:"5px", padding:"2px 6px", borderRadius:"4px", fontSize:"10px"}}>{r.toUpperCase()}</button>)}
-                    </div>
-                </div>
-                {trending.map((t,i)=>(
-                    <div key={i} onClick={()=>handleSearch(t.ticker)} style={{display:"flex", justifyContent:"space-between", padding:"8px", borderBottom:"1px solid #2a2e39", cursor:"pointer"}}>
-                        <span style={{color:"#2962ff", fontWeight:"bold"}}>{t.ticker}</span>
-                        <span style={{color: t.change>=0?"#00e676":"#ff1744"}}>{t.change}%</span>
-                    </div>
-                ))}
+        {view === "about" ? (
+            <div style={{textAlign:"center", padding:"50px"}}>
+                <h1>About Kryptonax</h1>
+                <p>Democratizing financial intelligence for everyone.</p>
+                <button onClick={()=>setView("dashboard")} style={{marginTop:"20px", padding:"10px 20px", background:"#2962ff", color:"white", border:"none", borderRadius:"4px", cursor:"pointer"}}>Go to Dashboard</button>
+            </div>
+        ) : (
+            <div style={{display: "flex", maxWidth: "1600px", margin: "20px auto", gap: "20px", padding: "0 20px"}}>
                 
-                <h4 style={{marginTop:"30px", color:"white"}}>Watchlist</h4>
-                {favorites.map((f,i)=>(
-                    <div key={i} onClick={()=>handleSearch(f.ticker)} style={{padding:"8px", borderBottom:"1px solid #2a2e39", cursor:"pointer", color:"#d1d4dc"}}>⭐ {f.ticker}</div>
-                ))}
-            </aside>
-            )}
+                {/* SIDEBAR */}
+                {!searchedTicker && (
+                <aside style={{width: "300px", background: "#1e222d", padding: "20px", borderRadius: "8px", height: "fit-content", border: "1px solid #2a2e39"}}>
+                    <div style={{display:"flex", justifyContent:"space-between", marginBottom:"15px", borderBottom:"1px solid #2a2e39", paddingBottom:"10px"}}>
+                        <span style={{color:"white", fontWeight:"bold"}}>Top Movers</span>
+                        <div>
+                            {['all','in','us'].map(r=><button key={r} onClick={()=>setMoverRegion(r)} style={{background: moverRegion===r?"#2962ff":"#2a2e39", color:"white", border:"none", marginLeft:"5px", padding:"2px 6px", borderRadius:"4px", fontSize:"10px", cursor:"pointer"}}>{r.toUpperCase()}</button>)}
+                        </div>
+                    </div>
+                    {trending.map((t,i)=>(
+                        <div key={i} onClick={()=>{setTicker(t.ticker); handleSearch(t.ticker);}} style={{display:"flex", justifyContent:"space-between", padding:"8px", borderBottom:"1px solid #2a2e39", cursor:"pointer"}}>
+                            <span style={{color:"#d1d4dc", fontWeight:"bold"}}>{t.ticker}</span>
+                            <span style={{color: t.change>=0?"#00e676":"#ff1744"}}>{t.change}%</span>
+                        </div>
+                    ))}
+                    
+                    <h4 style={{marginTop:"30px", color:"white", borderBottom:"1px solid #2a2e39", paddingBottom:"10px"}}>Watchlist</h4>
+                    {favorites.map((f,i)=>(
+                        <div key={i} style={{padding:"8px", borderBottom:"1px solid #2a2e39", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                            <span onClick={()=>{setTicker(f.ticker); handleSearch(f.ticker);}} style={{cursor:"pointer", color:"#d1d4dc", fontWeight:"bold"}}>{f.ticker}</span>
+                            <button onClick={()=>toggleSubscribe(f.ticker)} style={{background:"none", border:"none", color:"#ff1744", cursor:"pointer"}}>✕</button>
+                        </div>
+                    ))}
+                </aside>
+                )}
 
-            {/* MAIN CONTENT */}
-            <main style={{flex: 1}}>
-                {!searchedTicker ? (
-                    /* LANDING PAGE */
-                    <div>
-                        <div style={{background: "#1e222d", padding: "40px", borderRadius: "8px", textAlign: "center", marginBottom: "20px"}}>
-                            <h1 style={{color: "white"}}>Financial Intelligence</h1>
-                            <div style={{display:"flex", justifyContent:"center", gap:"10px", maxWidth:"500px", margin:"0 auto"}}>
-                                <input placeholder="Search (e.g. NVDA, RELIANCE.NS)" style={{flex:1, padding:"12px", borderRadius:"20px", border:"none"}} onChange={e=>setTicker(e.target.value)}/>
-                                <button style={{padding:"12px 24px", borderRadius:"20px", border:"none", background:"#2962ff", color:"white"}} onClick={()=>handleSearch()}>Search</button>
+                {/* MAIN CONTENT */}
+                <main style={{flex: 1}}>
+                    {!searchedTicker ? (
+                        <div>
+                            <div style={{background: "#1e222d", padding: "40px", borderRadius: "8px", textAlign: "center", marginBottom: "20px", border: "1px solid #2a2e39"}}>
+                                <h1 style={{color: "white"}}>Financial Intelligence</h1>
+                                <div style={{position:"relative", maxWidth:"500px", margin:"0 auto"}}>
+                                    <div style={{display:"flex", gap:"10px"}}>
+                                        <input 
+                                            placeholder="Search (e.g. NVDA, JPM)..." 
+                                            value={ticker}
+                                            style={{flex:1, padding:"12px", borderRadius:"20px", border:"1px solid #2a2e39", background:"#131722", color:"white"}} 
+                                            onChange={e=>{setTicker(e.target.value); fetchSuggestions(e.target.value); setShowSuggestions(true);}}
+                                        />
+                                        <button style={{padding:"12px 24px", borderRadius:"20px", border:"none", background:"#2962ff", color:"white", cursor:"pointer"}} onClick={()=>handleSearch()}>Search</button>
+                                    </div>
+                                    {/* RESTORED SUGGESTIONS DROPDOWN */}
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <div style={{position:"absolute", top:"50px", width:"100%", background:"#1e222d", border:"1px solid #2a2e39", zIndex:100}}>
+                                            {suggestions.map(s=>(
+                                                <div key={s.symbol} onClick={()=>{setTicker(s.symbol); handleSearch(s.symbol);}} style={{padding:"10px", borderBottom:"1px solid #2a2e39", cursor:"pointer", textAlign:"left"}}>
+                                                    <span style={{fontWeight:"bold", color:"#2962ff"}}>{s.symbol}</span> <span style={{fontSize:"12px", color:"#787b86"}}>{s.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <h3 style={{color:"white", borderLeft:"4px solid #2962ff", paddingLeft:"10px"}}>Top Trending News</h3>
+                            <div style={{display:"flex", gap:"10px", overflowX:"auto", marginBottom:"15px", paddingBottom:"5px"}}>
+                                {['all','gold','stocks','mutual_funds','crypto','real_estate'].map(c=>(
+                                    <button key={c} onClick={()=>setNewsCategory(c)} style={{whiteSpace:"nowrap", padding:"8px 16px", borderRadius:"20px", border:"none", background: newsCategory===c?"#2962ff":"#2a2e39", color: newsCategory===c?"white":"#787b86", cursor:"pointer", fontWeight:"bold"}}>{c.replace("_"," ").toUpperCase()}</button>
+                                ))}
+                            </div>
+
+                            <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))", gap:"20px"}}>
+                                {generalNews.map((n,i)=>(
+                                    <div key={i} style={{background: "#1e222d", padding: "20px", borderRadius: "8px", border: "1px solid #2a2e39"}}>
+                                        <div style={{display:"flex", justifyContent:"space-between", marginBottom:"10px"}}>
+                                            <span style={{color: n.sentiment==="positive"?"#00e676":n.sentiment==="negative"?"#ff1744":"#651fff", fontSize:"12px", fontWeight:"bold"}}>{n.sentiment.toUpperCase()}</span>
+                                            <span style={{color:"#2962ff", border:"1px solid #2962ff", padding:"2px 6px", borderRadius:"4px", fontSize:"10px"}}>{n.category_tag}</span>
+                                        </div>
+                                        <a href={n.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none", color:"white"}}>
+                                            <h4 style={{margin:"0 0 10px 0"}}>{n.title}</h4>
+                                        </a>
+                                        <p style={{color:"#787b86", fontSize:"13px"}}>{n.description}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+                    ) : (
+                        /* RESTORED DASHBOARD VIEW */
+                        <div>
+                            <div style={{display:"flex", alignItems:"baseline", gap:"15px", marginBottom:"20px"}}>
+                                <h1 style={{color:"white", margin:0}}>{currentQuote?.price} <span style={{fontSize:"16px", color:"#787b86"}}>USD</span></h1>
+                                <span style={{color: currentQuote?.change>=0?"#00e676":"#ff1744", fontSize:"20px"}}>{currentQuote?.change} ({currentQuote?.percent}%)</span>
+                                <BellIcon active={isSubscribed} onClick={()=>toggleSubscribe()}/>
+                            </div>
 
-                        <h3 style={{color:"white", borderLeft:"4px solid #2962ff", paddingLeft:"10px"}}>Top Trending News</h3>
-                        <div style={{display:"flex", gap:"10px", overflowX:"auto", marginBottom:"15px", paddingBottom:"5px"}}>
-                            {['all','gold','stocks','mutual_funds','crypto','real_estate'].map(c=>(
-                                <button key={c} onClick={()=>setNewsCategory(c)} style={{whiteSpace:"nowrap", padding:"8px 16px", borderRadius:"20px", border:"none", background: newsCategory===c?"#2962ff":"#2a2e39", color: newsCategory===c?"white":"#787b86"}}>{c.replace("_"," ").toUpperCase()}</button>
-                            ))}
+                            <div style={{height:"400px", background:"#1e222d", padding:"20px", borderRadius:"8px", marginBottom:"20px", border: "1px solid #2a2e39"}}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart data={predictiveData}>
+                                        <CartesianGrid stroke="#2a2e39" strokeDasharray="3 3"/>
+                                        <XAxis dataKey="date" tick={{fontSize:10, fill:"#787b86"}}/>
+                                        <YAxis domain={['auto','auto']} tick={{fontSize:10, fill:"#787b86"}}/>
+                                        <Tooltip contentStyle={{background:"#1e222d", border:"1px solid #2a2e39", color:"white"}}/>
+                                        <Area type="monotone" dataKey="upper" stroke="none" fill="#2962ff" opacity={0.1}/>
+                                        <Line type="monotone" dataKey="predicted" stroke="#2962ff" dot={false} strokeWidth={2}/>
+                                        <Bar dataKey="close" barSize={10} fill="#00e676"/>
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
-
-                        <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))", gap:"20px"}}>
-                            {generalNews.map((n,i)=>(
-                                <div key={i} style={{background: "#1e222d", padding: "20px", borderRadius: "8px"}}>
-                                    <div style={{display:"flex", justifyContent:"space-between", marginBottom:"10px"}}>
-                                        <span style={{color: n.sentiment==="positive"?"#00e676":"#ff1744", fontSize:"12px", fontWeight:"bold"}}>{n.sentiment.toUpperCase()}</span>
-                                        <span style={{color:"#2962ff", border:"1px solid #2962ff", padding:"2px 6px", borderRadius:"4px", fontSize:"10px"}}>{n.category_tag}</span>
-                                    </div>
-                                    <h4 style={{color:"white", margin:"0 0 10px 0"}}>{n.title}</h4>
-                                    <p style={{color:"#787b86", fontSize:"13px"}}>{n.description}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    /* DASHBOARD (Restored Features) */
-                    <div>
-                        <div style={{display:"flex", alignItems:"baseline", gap:"15px", marginBottom:"20px"}}>
-                            <h1 style={{color:"white", margin:0}}>{currentQuote?.price} <span style={{fontSize:"16px", color:"#787b86"}}>USD</span></h1>
-                            <span style={{color: currentQuote?.change>=0?"#00e676":"#ff1744", fontSize:"20px"}}>{currentQuote?.change} ({currentQuote?.percent}%)</span>
-                            <BellIcon active={isSubscribed} onClick={toggleSubscribe}/>
-                        </div>
-
-                        <div style={{height:"400px", background:"#1e222d", padding:"20px", borderRadius:"8px", marginBottom:"20px"}}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={predictiveData}>
-                                    <CartesianGrid stroke="#2a2e39" strokeDasharray="3 3"/>
-                                    <XAxis dataKey="date" tick={{fontSize:10}}/>
-                                    <YAxis domain={['auto','auto']} tick={{fontSize:10}}/>
-                                    <Tooltip contentStyle={{background:"#1e222d", border:"1px solid #2a2e39"}}/>
-                                    <Area type="monotone" dataKey="upper" stroke="none" fill="#2962ff" opacity={0.1}/>
-                                    <Line type="monotone" dataKey="predicted" stroke="#2962ff" dot={false} strokeWidth={2}/>
-                                    <Bar dataKey="close" barSize={10} fill="#00e676"/>
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )}
+                </main>
+            </div>
+        )}
     </div>
   );
 }
