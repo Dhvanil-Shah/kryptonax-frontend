@@ -761,7 +761,6 @@
 
 
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, 
@@ -781,15 +780,7 @@ const BellIcon = ({ active, onClick }) => (
   </svg>
 );
 
-const MoreIcon = ({ onClick }) => (
-  <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#787b86" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'pointer', marginLeft: 'auto' }}>
-    <circle cx="12" cy="12" r="1"></circle>
-    <circle cx="12" cy="5" r="1"></circle>
-    <circle cx="12" cy="19" r="1"></circle>
-  </svg>
-);
-
-// --- HELPER COMPONENTS ---
+// --- CHARTS & HELPERS ---
 const Candle = (props) => {
   const { x, y, width, height, close, open } = props;
   const isGreen = close > open;
@@ -804,381 +795,226 @@ const Candle = (props) => {
 
 const simulateCandles = (data) => {
     if (!data || data.length === 0) return [];
-    return data.map(d => {
-        const close = d.price;
-        const volatility = close * 0.02; 
-        const open = close + (Math.random() - 0.5) * volatility;
-        const high = Math.max(open, close) + Math.random() * volatility;
-        const low = Math.min(open, close) - Math.random() * volatility;
-        return { ...d, open, high, low, close };
-    });
+    return data.map(d => ({ ...d, open: d.price * 0.99, close: d.price, high: d.price * 1.01, low: d.price * 0.98 }));
 };
 
-const generateUniquePrediction = (historyData, ticker) => {
-    if (!historyData || historyData.length === 0 || !ticker) return [];
-    const lastPoint = historyData[historyData.length - 1];
-    let lastPrice = lastPoint.price;
-    const futureData = [];
-    let lastDate = new Date(lastPoint.date);
-    for (let i = 1; i <= 15; i++) {
-        const nextDate = new Date(lastDate);
-        nextDate.setDate(lastDate.getDate() + 1);
-        const predictedPrice = lastPrice + (Math.sin(i * 0.5) * lastPrice * 0.02);
-        futureData.push({
-            date: nextDate.toISOString().split('T')[0],
-            predicted: predictedPrice,
-            upper: predictedPrice * 1.05, 
-            lower: predictedPrice * 0.95,
-            isPrediction: true
-        });
-        lastDate = nextDate;
+const generatePrediction = (data) => {
+    if (!data.length) return [];
+    const last = data[data.length-1];
+    let price = last.price;
+    const future = [];
+    let date = new Date(last.date);
+    for(let i=1; i<=10; i++){
+        date.setDate(date.getDate()+1);
+        price = price * (1 + (Math.random() * 0.04 - 0.02));
+        future.push({ date: date.toISOString().split('T')[0], predicted: price, upper: price*1.05, lower: price*0.95, isPrediction: true });
     }
-    const past = historyData.map(d => ({ ...d, predicted: d.price, upper: d.price, lower: d.price }));
-    return [...past, ...futureData];
-};
-
-const SentimentGauge = ({ data, newsCounts }) => {
-  const getFluidSentiment = () => {
-    if (!data || data.length < 5) return { rotation: 0, text: "Analyzing...", color: "#FFD700" };
-    const prices = data.map(d => d.price);
-    const changePct = ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100; 
-    const pos = newsCounts.find(n => n.name === 'Positive')?.value || 0;
-    const neg = newsCounts.find(n => n.name === 'Negative')?.value || 0;
-    const rotation = Math.max(-90, Math.min(90, (changePct * 10) + ((pos - neg) * 2) * 3)); 
-    let text = "Neutral", color = "#FFD700";
-    if (rotation > 45) { text = "Strong Buy"; color = "#00e676"; }
-    else if (rotation > 10) { text = "Buy"; color = "#69f0ae"; }
-    else if (rotation < -45) { text = "Strong Sell"; color = "#ff1744"; }
-    else if (rotation < -10) { text = "Sell"; color = "#ff5252"; }
-    return { rotation, text, color };
-  };
-  const { rotation, text, color } = getFluidSentiment();
-  return (
-    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <h4 style={{ color: "#d1d4dc", marginBottom: "0px" }}>Technical Analysis</h4>
-      <p style={{ fontSize: "11px", color: "#787b86" }}>Fluid AI Calculation</p>
-      <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
-        <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
-        <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
-        <g transform={`rotate(${rotation}, 100, 100)`} style={{ transition: 'transform 0.5s ease-out' }}>
-          <path d="M 100 100 L 100 25" stroke="white" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="8" fill="#1e222d" stroke="white" strokeWidth="2" />
-        </g>
-        <text x="100" y="80" textAnchor="middle" fill={color} fontSize="22" fontWeight="bold" style={{textShadow: `0 0 15px ${color}`}}>{text}</text>
-      </svg>
-    </div>
-  );
+    return [...data.map(d=>({...d, predicted:d.price})), ...future];
 };
 
 function App() {
+  // --- STATE ---
   const [view, setView] = useState("dashboard");
   const [ticker, setTicker] = useState("");
-  const [searchedTicker, setSearchedTicker] = useState(""); 
+  const [searchedTicker, setSearchedTicker] = useState("");
   const [news, setNews] = useState([]);
-  const [generalNews, setGeneralNews] = useState([]); 
-  const [mergedData, setMergedData] = useState([]); 
-  const [candleData, setCandleData] = useState([]); 
-  const [predictiveData, setPredictiveData] = useState([]); 
-  const [currentQuote, setCurrentQuote] = useState(null); 
-  const [loading, setLoading] = useState(false); 
-  const [isAppLoading, setIsAppLoading] = useState(false);
-  const [chartRange, setChartRange] = useState("1mo"); 
-  const [timeRange, setTimeRange] = useState("30d");
+  const [generalNews, setGeneralNews] = useState([]);
+  const [candleData, setCandleData] = useState([]);
+  const [predictiveData, setPredictiveData] = useState([]);
+  const [currentQuote, setCurrentQuote] = useState(null);
   const [trending, setTrending] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [searchHistory, setSearchHistory] = useState([]); 
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [pricesCache, setPricesCache] = useState({}); 
-  const [newFav, setNewFav] = useState(""); 
-  const [favSuggestions, setFavSuggestions] = useState([]);
-  const [showFavSuggestions, setShowFavSuggestions] = useState(false);
-  const [newsSearch, setNewsSearch] = useState(""); 
-  const [watchLater, setWatchLater] = useState([]); 
-  const [activeMenu, setActiveMenu] = useState(null); 
-  const [notifications, setNotifications] = useState([]); 
-  
-  // --- NEW FEATURE STATES ---
-  const [moverRegion, setMoverRegion] = useState("all"); 
+  const [moverRegion, setMoverRegion] = useState("all");
   const [newsCategory, setNewsCategory] = useState("all");
-
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [userName, setUserName] = useState(localStorage.getItem("userName") || "");
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState("login"); 
-  const [authError, setAuthError] = useState("");
-  const [authSuccess, setAuthSuccess] = useState(""); 
+  const [authMode, setAuthMode] = useState("login");
   const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [showAboutModal, setShowAboutModal] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1);
-  const [otpCode, setOtpCode] = useState("");
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const COLORS = ['#00e676', '#ff1744', '#651fff']; 
-
+  // --- INIT ---
   useEffect(() => {
-    fetchTrending(moverRegion); 
+    fetchTrending(moverRegion);
     fetchGeneralNews(newsCategory);
-    
-    const savedWatchLater = localStorage.getItem("watchLaterNews");
-    if (savedWatchLater) setWatchLater(JSON.parse(savedWatchLater));
-    const savedNotifs = localStorage.getItem("notifications");
-    if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
-    const savedHistory = localStorage.getItem("searchHistory");
-    if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
-    
-    if (token) fetchFavorites();
+    if(token) fetchFavorites();
   }, []);
 
   useEffect(() => { fetchTrending(moverRegion); }, [moverRegion]);
   useEffect(() => { fetchGeneralNews(newsCategory); }, [newsCategory]);
 
-  const fetchTrending = async (region) => { 
-    try { 
-      const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); 
-      setTrending(await res.json()); 
-    } catch (e) { setTrending([]); } 
+  // --- API ---
+  const fetchTrending = async (region) => {
+      try { const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); setTrending(await res.json()); } catch {}
   };
-  
-  const fetchGeneralNews = async (cat) => { 
-    try { 
-      const res = await fetch(`${API_BASE_URL}/news/general?category=${cat}`); 
-      setGeneralNews(await res.json()); 
-    } catch (e) { setGeneralNews([]); } 
+  const fetchGeneralNews = async (cat) => {
+      try { const res = await fetch(`${API_BASE_URL}/news/general?category=${cat}`); setGeneralNews(await res.json()); } catch {}
+  };
+  const fetchFavorites = async () => {
+      if(!token) return;
+      try { const res = await fetch(`${API_BASE_URL}/favorites`, {headers: {"Authorization": `Bearer ${token}`}}); setFavorites(await res.json()); } catch {}
+  };
+
+  const handleSearch = async (t = ticker) => {
+      if(!t) return;
+      setSearchedTicker(t);
+      try {
+          // 1. Quote
+          const qRes = await fetch(`${API_BASE_URL}/quote/${t}`);
+          setCurrentQuote(await qRes.json());
+          // 2. History
+          const hRes = await fetch(`${API_BASE_URL}/history/${t}`);
+          const hData = await hRes.json();
+          setCandleData(simulateCandles(hData.data || []));
+          setPredictiveData(generatePrediction(hData.data || []));
+          // 3. Check Subscription
+          if(favorites.some(f => f.ticker === t)) setIsSubscribed(true);
+          else setIsSubscribed(false);
+      } catch {}
+  };
+
+  const toggleSubscribe = async () => {
+      if(!token) { setShowAuthModal(true); return; }
+      const method = isSubscribed ? "DELETE" : "POST";
+      await fetch(`${API_BASE_URL}/subscribe/${searchedTicker}`, {method, headers: {"Authorization": `Bearer ${token}`}});
+      setIsSubscribed(!isSubscribed);
+      fetchFavorites();
   };
 
   const handleAuth = async () => {
-      setAuthError(""); setAuthSuccess(""); setIsAppLoading(true);
-      try {
-          if (authMode === "forgot") {
-              if (forgotStep === 1) {
-                  if (!username) throw new Error("Please enter your email.");
-                  const res = await fetch(`${API_BASE_URL}/forgot-password`, { 
-                      method: "POST", headers: {"Content-Type": "application/json"}, 
-                      body: JSON.stringify({username}) 
-                  });
-                  if (!res.ok) throw new Error("Error sending OTP");
-                  setAuthSuccess("OTP Sent!"); setForgotStep(2);
-              } else {
-                  const res = await fetch(`${API_BASE_URL}/reset-password`, { 
-                      method: "POST", headers: {"Content-Type": "application/json"}, 
-                      body: JSON.stringify({username, otp: otpCode, new_password: password}) 
-                  });
-                  if (!res.ok) throw new Error("Reset failed");
-                  setAuthSuccess("Password Reset!"); 
-                  setTimeout(() => { setAuthMode("login"); setForgotStep(1); }, 2000);
-              }
-              setIsAppLoading(false); return;
-          }
-
-          if (!username || !password) throw new Error("Fill fields.");
-          if (authMode === "register") {
-             const res = await fetch(`${API_BASE_URL}/register`, { 
-                 method: "POST", headers: { "Content-Type": "application/json" }, 
-                 body: JSON.stringify({ username, password, first_name: firstName, last_name: lastName, mobile }) 
-             });
-             if (!res.ok) throw new Error("Registration failed");
-             setAuthMode("login"); setAuthSuccess("Account created!"); 
+      const url = authMode === "login" ? "/token" : "/register";
+      const body = authMode === "login" ? new FormData() : JSON.stringify({username, password, first_name:"User", last_name:"", mobile:""});
+      if(authMode === "login") { body.append("username", username); body.append("password", password); }
+      
+      const res = await fetch(`${API_BASE_URL}${url}`, {
+          method: "POST",
+          headers: authMode === "register" ? {"Content-Type": "application/json"} : {},
+          body: body
+      });
+      if(res.ok) {
+          if(authMode === "login") {
+              const data = await res.json();
+              setToken(data.access_token);
+              localStorage.setItem("token", data.access_token);
+              setShowAuthModal(false);
+              fetchFavorites();
           } else {
-             const formData = new FormData(); 
-             formData.append("username", username); formData.append("password", password);
-             const res = await fetch(`${API_BASE_URL}/token`, { method: "POST", body: formData });
-             if (!res.ok) throw new Error("Invalid Credentials");
-             const data = await res.json();
-             setToken(data.access_token); setUserName(data.user_name);
-             localStorage.setItem("token", data.access_token); localStorage.setItem("userName", data.user_name);
-             setShowAuthModal(false); 
+              setAuthMode("login");
+              alert("Account created! Please login.");
           }
-      } catch (e) { setAuthError(e.message); } finally { setIsAppLoading(false); }
+      } else {
+          alert("Auth failed");
+      }
   };
 
-  const logout = () => { setToken(null); setUserName(""); localStorage.clear(); setFavorites([]); window.location.reload(); };
-  
-  const handleSearch = async (overrideTicker = null) => { 
-      const t = overrideTicker || ticker; if (!t) return; 
-      setShowSuggestions(false); setTicker(t); setSearchedTicker(t); setLoading(true); 
-      setNews([]); setMergedData([]); setCurrentQuote(null); setView("dashboard"); 
-      try { 
-          const qRes = await fetch(`${API_BASE_URL}/quote/${t}`); setCurrentQuote(await qRes.json());
-          const nRes = await fetch(`${API_BASE_URL}/news/${t}`); 
-          setNews(await nRes.json()); 
-          const hRes = await fetch(`${API_BASE_URL}/history/${t}`); 
-          const hist = await hRes.json();
-          setMergedData(hist.data || []);
-          setCandleData(simulateCandles(hist.data || [])); 
-          setPredictiveData(generateUniquePrediction(hist.data || [], t)); 
-      } catch (error) {} 
-      setLoading(false); 
-  };
-
-  const toggleFavorite = async (t) => {
-    if(!token) { setShowAuthModal(true); return; }
-    await fetch(`${API_BASE_URL}/favorites/${t}`, { method: "POST", headers: { "Authorization": `Bearer ${token}` } });
-    fetchFavorites();
-  };
-  const fetchFavorites = async () => {
-    try { const res = await fetch(`${API_BASE_URL}/favorites`, { headers: { "Authorization": `Bearer ${token}` } }); setFavorites(await res.json()); } catch(e){}
-  };
-
-  const filteredGeneralNews = useMemo(() => generalNews.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [generalNews, newsSearch]);
-  
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
-      {(isAppLoading || loading) && ( <div className="loading-overlay" style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.8)', zIndex:9999, display:'flex', justifyContent:'center', alignItems:'center'}}><div className="spinner" style={{width:50, height:50, border:'5px solid #333', borderTop:'5px solid #2962ff', borderRadius:'50%', animation:'spin 1s linear infinite'}}></div></div> )}
+    <div style={{fontFamily: "Inter, sans-serif", background: "#131722", minHeight: "100vh", color: "#d1d4dc"}}>
+        
+        {/* NAVBAR */}
+        <nav style={{padding: "15px 30px", background: "#1e222d", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39"}}>
+            <h2 style={{margin:0, color: "#2962ff", cursor:"pointer"}} onClick={()=>{setSearchedTicker(""); setTicker("");}}>KRYPTONAX</h2>
+            {token ? <button onClick={()=>{setToken(null); localStorage.clear();}} style={{background:"#ff1744", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px"}}>Logout</button> 
+                   : <button onClick={()=>setShowAuthModal(true)} style={{background:"#2962ff", border:"none", color:"white", padding:"8px 16px", borderRadius:"4px"}}>Login</button>}
+        </nav>
 
-      <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
-        <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span></span>{searchedTicker && <button onClick={() => {setSearchedTicker(""); setTicker("");}} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back</button>}</div>
-        <div style={{display: "flex", alignItems: "center", gap: "25px"}}>{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login</button> )}</div>
-      </nav>
-
-      {showAuthModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-            <div style={{ backgroundColor: "#1e222d", padding: "40px", borderRadius: "8px", border: "1px solid #2a2e39", width: "400px", textAlign: "center", position: "relative" }}>
-                <button onClick={() => setShowAuthModal(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "#787b86", fontSize: "20px", cursor: "pointer" }}>✕</button>
-                <h2 style={{ color: "white" }}>{authMode === "login" ? "Login" : authMode === "register" ? "Sign Up" : "Reset Password"}</h2>
-                {authError && <p style={{color: "#ff1744"}}>{authError}</p>}
-                
-                {authMode === "forgot" ? (
-                    <>
-                        {forgotStep === 1 ? (
-                            <><input type="text" placeholder="Email" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} /><button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", marginTop: "15px" }}>Send OTP</button></>
-                        ) : (
-                            <><input type="text" placeholder="OTP" value={otpCode} onChange={e => setOtpCode(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} /><input type="password" placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "95%", padding: "10px", marginTop: "5px", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} /><button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", marginTop: "15px" }}>Reset Password</button></>
-                        )}
-                        <p style={{ fontSize: "12px", color: "#787b86", marginTop: "15px", cursor: "pointer" }} onClick={() => { setAuthMode("login"); setForgotStep(1); }}>Back to Login</p>
-                    </>
-                ) : (
-                    <>
-                        {authMode === "register" && (
-                            <div style={{display: "flex", gap: "10px"}}><input type="text" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} style={{ width: "50%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} /><input type="text" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} style={{ width: "50%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} /></div>
-                        )}
-                        <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} />
-                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "95%", padding: "10px", margin: "5px 0", backgroundColor: "#131722", border: "1px solid #2a2e39", color: "white" }} />
-                        
-                        {authMode === "login" && <p style={{ fontSize: "12px", color: "#2962ff", cursor: "pointer", textAlign: "right", marginTop: "5px" }} onClick={() => setAuthMode("forgot")}>Forgot Password?</p>}
-                        
-                        <button onClick={handleAuth} style={{ width: "100%", padding: "12px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginTop: "15px" }}>{authMode === "login" ? "Login" : "Sign Up"}</button>
-                        <p style={{ fontSize: "12px", color: "#787b86", marginTop: "20px", cursor: "pointer" }} onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>{authMode === "login" ? "Create Account" : "Back to Login"}</p>
-                    </>
-                )}
+        {/* AUTH MODAL */}
+        {showAuthModal && (
+            <div style={{position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.8)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:1000}}>
+                <div style={{background:"#1e222d", padding:"30px", borderRadius:"8px", width:"300px"}}>
+                    <h3 style={{color:"white"}}>{authMode.toUpperCase()}</h3>
+                    <input style={{width:"100%", padding:"10px", marginBottom:"10px"}} placeholder="Email" onChange={e=>setUsername(e.target.value)}/>
+                    <input style={{width:"100%", padding:"10px", marginBottom:"10px"}} type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)}/>
+                    <button style={{width:"100%", padding:"10px", background:"#2962ff", color:"white", border:"none"}} onClick={handleAuth}>Submit</button>
+                    <p style={{marginTop:"10px", cursor:"pointer", color:"#787b86"}} onClick={()=>setAuthMode(authMode==="login"?"register":"login")}>Switch to {authMode==="login"?"Sign Up":"Login"}</p>
+                    <button style={{marginTop:"10px", background:"none", border:"none", color:"red"}} onClick={()=>setShowAuthModal(false)}>Close</button>
+                </div>
             </div>
-        </div>
-      )}
+        )}
 
-      <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
+        <div style={{display: "flex", maxWidth: "1600px", margin: "20px auto", gap: "20px", padding: "0 20px"}}>
             
-            {/* SIDEBAR */}
+            {/* LEFT SIDEBAR */}
             {!searchedTicker && (
-                <aside style={{ width: "300px", backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height: "fit-content" }}>
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: "1px solid #2a2e39", paddingBottom: "10px", marginBottom:'10px'}}>
-                        <h3 style={{ margin:0, color: "#d1d4dc", fontSize: "16px" }}>🚀 Top Movers</h3>
-                        <div style={{display:'flex', gap:'5px'}}>
-                            {['all', 'in', 'us'].map(r => (
-                                <span key={r} onClick={() => setMoverRegion(r)} style={{
-                                    fontSize:'10px', padding:'2px 6px', borderRadius:'3px', cursor:'pointer',
-                                    backgroundColor: moverRegion === r ? '#2962ff' : '#2a2e39', color: 'white', fontWeight:'bold', textTransform:'uppercase'
-                                }}>{r}</span>
-                            ))}
-                        </div>
+            <aside style={{width: "300px", background: "#1e222d", padding: "20px", borderRadius: "8px", height: "fit-content"}}>
+                <div style={{display:"flex", justifyContent:"space-between", marginBottom:"15px"}}>
+                    <span style={{color:"white", fontWeight:"bold"}}>Top Movers</span>
+                    <div>
+                        {['all','in','us'].map(r=><button key={r} onClick={()=>setMoverRegion(r)} style={{background: moverRegion===r?"#2962ff":"#2a2e39", color:"white", border:"none", marginLeft:"5px", padding:"2px 6px", borderRadius:"4px", fontSize:"10px"}}>{r.toUpperCase()}</button>)}
                     </div>
-
-                    <ul style={{ listStyle: "none", padding: 0 }}> 
-                        {trending.map((t, i) => ( 
-                            <li key={i} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: "1px solid #2a2e39" }}> 
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}> 
-                                    <span style={{ cursor: "pointer", fontWeight: "bold", color: "#d1d4dc" }} onClick={() => handleSearch(t.ticker)}>{t.ticker}</span> 
-                                    <div style={{textAlign:'right'}}>
-                                        <div style={{color:'white', fontSize:'12px'}}>{t.price}</div>
-                                        <span style={{ color: t.change >= 0 ? "#00e676" : "#ff1744", fontWeight: "bold", fontSize: "12px" }}>{t.change > 0 ? "+" : ""}{t.change}%</span> 
-                                    </div>
-                                </div> 
-                            </li> 
-                        ))} 
-                    </ul>
-
-                    <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>⭐ Watchlist</h3>
-                    <ul style={{ listStyle: "none", padding: 0 }}> {favorites.map(fav => ( <li key={fav.ticker} style={{ marginBottom: "8px", padding: "10px", backgroundColor: "#2a2e39", borderRadius: "4px", cursor:'pointer' }} onClick={() => handleSearch(fav.ticker)}> <span style={{ fontWeight: "bold", color: "#d1d4dc" }}>{fav.ticker}</span> </li> ))} </ul>
-                </aside>
+                </div>
+                {trending.map((t,i)=>(
+                    <div key={i} onClick={()=>handleSearch(t.ticker)} style={{display:"flex", justifyContent:"space-between", padding:"8px", borderBottom:"1px solid #2a2e39", cursor:"pointer"}}>
+                        <span style={{color:"#2962ff", fontWeight:"bold"}}>{t.ticker}</span>
+                        <span style={{color: t.change>=0?"#00e676":"#ff1744"}}>{t.change}%</span>
+                    </div>
+                ))}
+                
+                <h4 style={{marginTop:"30px", color:"white"}}>Watchlist</h4>
+                {favorites.map((f,i)=>(
+                    <div key={i} onClick={()=>handleSearch(f.ticker)} style={{padding:"8px", borderBottom:"1px solid #2a2e39", cursor:"pointer", color:"#d1d4dc"}}>⭐ {f.ticker}</div>
+                ))}
+            </aside>
             )}
 
-            <main style={{ flex: 1 }}>
+            {/* MAIN CONTENT */}
+            <main style={{flex: 1}}>
                 {!searchedTicker ? (
+                    /* LANDING PAGE */
                     <div>
-                        <div style={{ backgroundColor: "#1e222d", padding: "30px", borderRadius: "8px", marginBottom: "30px", textAlign:'center', border: "1px solid #2a2e39" }}>
-                            <h1 style={{color:'white', marginBottom:'20px'}}>Financial Intelligence for Everyone</h1>
-                            <div style={{ display: "flex", gap: "10px", justifyContent: "center", position: "relative", maxWidth:'600px', margin:'0 auto' }}>
-                                <input type="text" placeholder="Search Ticker (e.g. RELIANCE.NS, BTC-USD)..." value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} style={{ flex:1, padding: "12px", borderRadius: "30px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white", fontSize: "16px" }} />
-                                <button onClick={() => handleSearch()} style={{ padding: "12px 30px", background: "#2962ff", color: "white", border: "none", borderRadius: "30px", cursor: "pointer", fontWeight: "bold" }}>Search</button>
+                        <div style={{background: "#1e222d", padding: "40px", borderRadius: "8px", textAlign: "center", marginBottom: "20px"}}>
+                            <h1 style={{color: "white"}}>Financial Intelligence</h1>
+                            <div style={{display:"flex", justifyContent:"center", gap:"10px", maxWidth:"500px", margin:"0 auto"}}>
+                                <input placeholder="Search (e.g. NVDA, RELIANCE.NS)" style={{flex:1, padding:"12px", borderRadius:"20px", border:"none"}} onChange={e=>setTicker(e.target.value)}/>
+                                <button style={{padding:"12px 24px", borderRadius:"20px", border:"none", background:"#2962ff", color:"white"}} onClick={()=>handleSearch()}>Search</button>
                             </div>
                         </div>
 
-                        <h2 style={{color: "white", marginBottom: "20px", borderLeft: "4px solid #2962ff", paddingLeft: "15px"}}>🔥 Top Trending News</h2>
-                        
-                        <div style={{display:'flex', gap:'10px', overflowX:'auto', paddingBottom:'15px', marginBottom:'10px', borderBottom:'1px solid #2a2e39'}}>
-                            {[
-                                {id: 'all', label: 'All Mix'}, 
-                                {id: 'gold', label: 'Gold'}, 
-                                {id: 'stocks', label: 'Stocks'}, 
-                                {id: 'mutual_funds', label: 'Mutual Funds'}, 
-                                {id: 'crypto', label: 'Crypto'}, 
-                                {id: 'real_estate', label: 'Real Estate'}
-                            ].map(cat => (
-                                <button key={cat.id} onClick={() => setNewsCategory(cat.id)} style={{
-                                    padding:'8px 16px', borderRadius:'20px', border:'none', cursor:'pointer', whiteSpace:'nowrap',
-                                    backgroundColor: newsCategory === cat.id ? '#2962ff' : '#2a2e39', color: newsCategory === cat.id ? 'white' : '#787b86', fontWeight:'bold'
-                                }}>
-                                    {cat.label}
-                                </button>
+                        <h3 style={{color:"white", borderLeft:"4px solid #2962ff", paddingLeft:"10px"}}>Top Trending News</h3>
+                        <div style={{display:"flex", gap:"10px", overflowX:"auto", marginBottom:"15px", paddingBottom:"5px"}}>
+                            {['all','gold','stocks','mutual_funds','crypto','real_estate'].map(c=>(
+                                <button key={c} onClick={()=>setNewsCategory(c)} style={{whiteSpace:"nowrap", padding:"8px 16px", borderRadius:"20px", border:"none", background: newsCategory===c?"#2962ff":"#2a2e39", color: newsCategory===c?"white":"#787b86"}}>{c.replace("_"," ").toUpperCase()}</button>
                             ))}
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px" }}>
-                            {filteredGeneralNews.map((article, index) => (
-                                <div key={index} className="news-card" style={{ backgroundColor: "#1e222d", borderRadius: "8px", border: "1px solid #2a2e39", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                    <div>
-                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                                            <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: article.sentiment === 'positive' ? '#00e676' : article.sentiment === 'negative' ? '#ff1744' : '#651fff' }}>{article.sentiment}</span>
-                                            {article.category_tag && (
-                                                <span style={{ fontSize: "10px", backgroundColor:'#2a2e39', padding:'2px 8px', borderRadius:'4px', color:'#2962ff', border:'1px solid #2962ff' }}>
-                                                    {article.category_tag}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h3 style={{ margin: "0 0 10px 0", fontSize: "16px", lineHeight: "1.4", color: "#d1d4dc" }}>{article.title}</h3>
-                                        <p style={{ fontSize: "13px", color: "#787b86", lineHeight: "1.5" }}>{article.description}</p>
+                        <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))", gap:"20px"}}>
+                            {generalNews.map((n,i)=>(
+                                <div key={i} style={{background: "#1e222d", padding: "20px", borderRadius: "8px"}}>
+                                    <div style={{display:"flex", justifyContent:"space-between", marginBottom:"10px"}}>
+                                        <span style={{color: n.sentiment==="positive"?"#00e676":"#ff1744", fontSize:"12px", fontWeight:"bold"}}>{n.sentiment.toUpperCase()}</span>
+                                        <span style={{color:"#2962ff", border:"1px solid #2962ff", padding:"2px 6px", borderRadius:"4px", fontSize:"10px"}}>{n.category_tag}</span>
                                     </div>
+                                    <h4 style={{color:"white", margin:"0 0 10px 0"}}>{n.title}</h4>
+                                    <p style={{color:"#787b86", fontSize:"13px"}}>{n.description}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
                 ) : (
-                    /* TICKER DETAIL VIEW (Chart, etc.) */
+                    /* DASHBOARD (Restored Features) */
                     <div>
-                         <div style={{ marginBottom: "20px", display: "flex", alignItems: "baseline", gap: "15px" }}> 
-                            <h1 style={{ margin: 0, color: "white", fontSize: "36px" }}>{currentQuote?.price} <span style={{fontSize: "16px", color: "#787b86"}}>{currentQuote?.currency}</span></h1> 
-                            <span style={{ fontSize: "20px", fontWeight: "bold", color: currentQuote?.change >= 0 ? "#00e676" : "#ff1744" }}>{currentQuote?.change > 0 ? "+" : ""}{currentQuote?.change} ({currentQuote?.percent}%)</span> 
-                            {token && <button onClick={() => toggleFavorite(searchedTicker)} style={{background:'none', border:'none', cursor:'pointer', fontSize:'24px'}}>⭐</button>}
+                        <div style={{display:"flex", alignItems:"baseline", gap:"15px", marginBottom:"20px"}}>
+                            <h1 style={{color:"white", margin:0}}>{currentQuote?.price} <span style={{fontSize:"16px", color:"#787b86"}}>USD</span></h1>
+                            <span style={{color: currentQuote?.change>=0?"#00e676":"#ff1744", fontSize:"20px"}}>{currentQuote?.change} ({currentQuote?.percent}%)</span>
+                            <BellIcon active={isSubscribed} onClick={toggleSubscribe}/>
                         </div>
-                        <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height:'400px' }}>
-                            <ResponsiveContainer width="100%" height="100%"> 
-                                <ComposedChart data={candleData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" opacity={0.5} />
-                                    <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} />
-                                    <YAxis domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} />
-                                    <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39"}} />
-                                    <Bar dataKey="close" shape={<Candle />} />
+
+                        <div style={{height:"400px", background:"#1e222d", padding:"20px", borderRadius:"8px", marginBottom:"20px"}}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={predictiveData}>
+                                    <CartesianGrid stroke="#2a2e39" strokeDasharray="3 3"/>
+                                    <XAxis dataKey="date" tick={{fontSize:10}}/>
+                                    <YAxis domain={['auto','auto']} tick={{fontSize:10}}/>
+                                    <Tooltip contentStyle={{background:"#1e222d", border:"1px solid #2a2e39"}}/>
+                                    <Area type="monotone" dataKey="upper" stroke="none" fill="#2962ff" opacity={0.1}/>
+                                    <Line type="monotone" dataKey="predicted" stroke="#2962ff" dot={false} strokeWidth={2}/>
+                                    <Bar dataKey="close" barSize={10} fill="#00e676"/>
                                 </ComposedChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
                 )}
             </main>
-      </div>
+        </div>
     </div>
   );
 }
