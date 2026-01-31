@@ -598,54 +598,62 @@
   opacity: 0.6;
 }
 
-/* Responsive modal */
-@media (max-width: 768px) {
-  .report-modal {
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .company-details-container {
     padding: 1.5rem;
-    max-width: 90vw;
+    margin: 1.5rem auto;
   }
 
-  .report-modal-title {
-    font-size: 1.4rem;
+  .leadership-grid,
+  .board-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 
-  .report-placeholder {
-    padding: 1.5rem;
+  .leadership-card .member-photo {
+    width: 120px;
+    height: 120px;
+  }
+
+  .history-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.2rem;
   }
 }
 
-/* Description section updated styling */
-.description-section h3 {
-  color: #4FACFE;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.description-section p {
-  color: #ccc;
-  line-height: 1.6;
-  font-size: 1rem;
-}
-
-/* Responsive Design */
+/* Mobile Large (max-width: 768px) */
 @media (max-width: 768px) {
   .company-details-container {
     padding: 1rem;
     margin: 1rem auto;
+    border-radius: 12px;
   }
 
   .company-details-tabs {
     flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
   }
 
   .tab-btn {
     padding: 0.6rem 1rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 100px;
   }
 
+  .history-section h2,
+  .board-section h2,
+  .compendium-section h2 {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  /* History Grid */
   .history-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
   }
 
@@ -653,9 +661,46 @@
     padding: 1rem;
   }
 
+  .history-item .label {
+    font-size: 0.8rem;
+  }
+
+  .history-item .value {
+    font-size: 1rem;
+  }
+
+  .description-section {
+    padding: 1rem;
+  }
+
+  .description-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .description-section p {
+    font-size: 0.9rem;
+  }
+
+  /* Board Members */
+  .leadership-section h3,
+  .board-section h3 {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .leadership-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.2rem;
+  }
+
   .board-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
+  }
+
+  .leadership-card .member-photo {
+    width: 100px;
+    height: 100px;
   }
 
   .member-photo {
@@ -663,28 +708,35 @@
     height: 80px;
   }
 
+  .member-name {
+    font-size: 0.9rem;
+  }
+
+  .member-title {
+    font-size: 0.75rem;
+  }
+
+  .role-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
+  /* Compendium */
   .compendium-tabs {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
-  .history-section h2,
-  .board-section h2,
-  .compendium-section h2 {
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .company-details-container {
-    border-radius: 8px;
+  .compendium-report {
+    padding: 1.2rem;
   }
 
-  .history-grid {
-    grid-template-columns: 1fr;
+  .report-name {
+    font-size: 1.1rem;
   }
 
-  .board-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .report-desc {
+    font-size: 0.85rem;
   }
 
   .quarters-table {
@@ -692,6 +744,302 @@
   }
 
   .quarters-table th,
+  .quarters-table td {
+    padding: 0.6rem;
+  }
+
+  .report-link {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Report Modal */
+  .report-modal {
+    padding: 1.5rem;
+    max-width: 90vw;
+    margin: 1rem;
+  }
+
+  .report-modal-title {
+    font-size: 1.3rem;
+  }
+
+  .report-meta {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .report-quarter,
+  .report-date {
+    font-size: 0.8rem;
+  }
+
+  .report-description {
+    font-size: 0.9rem;
+    margin: 1.5rem 0;
+  }
+
+  .download-btn {
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+  }
+}
+
+/* Mobile Small (max-width: 480px) */
+@media (max-width: 480px) {
+  .company-details-container {
+    padding: 0.8rem;
+    margin: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .company-details-tabs {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .tab-btn {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .history-section h2,
+  .board-section h2,
+  .compendium-section h2 {
+    font-size: 1.2rem;
+  }
+
+  /* History Grid - Single Column */
+  .history-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .history-item {
+    padding: 0.8rem;
+  }
+
+  .description-section {
+    padding: 0.8rem;
+  }
+
+  .description-section h3 {
+    font-size: 1rem;
+  }
+
+  .description-section p {
+    font-size: 0.85rem;
+  }
+
+  /* Board Members - 2 Columns */
+  .leadership-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .board-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .leadership-card .member-photo {
+    width: 90px;
+    height: 90px;
+  }
+
+  .member-photo {
+    width: 70px;
+    height: 70px;
+  }
+
+  .member-name {
+    font-size: 0.85rem;
+  }
+
+  .member-title {
+    font-size: 0.7rem;
+  }
+
+  .role-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  /* Compendium */
+  .compendium-report {
+    padding: 1rem;
+  }
+
+  .report-name {
+    font-size: 1rem;
+  }
+
+  .report-desc {
+    font-size: 0.8rem;
+  }
+
+  .quarters-table {
+    font-size: 0.8rem;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .quarters-table thead,
+  .quarters-table tbody,
+  .quarters-table tr,
+  .quarters-table th,
+  .quarters-table td {
+    display: block;
+  }
+
+  .quarters-table thead {
+    display: none;
+  }
+
+  .quarters-table tr {
+    margin-bottom: 0.8rem;
+    border: 1px solid rgba(79, 172, 254, 0.2);
+    border-radius: 8px;
+    padding: 0.8rem;
+    background: rgba(30, 34, 45, 0.5);
+  }
+
+  .quarters-table td {
+    padding: 0.4rem 0;
+    display: flex;
+    justify-content: space-between;
+    border: none;
+  }
+
+  .quarters-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #4FACFE;
+  }
+
+  .quarters-table td:last-child {
+    justify-content: center;
+  }
+
+  .report-link {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    width: 100%;
+  }
+
+  /* Modal */
+  .report-modal {
+    padding: 1.2rem;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .report-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .report-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .report-quarter,
+  .report-date {
+    font-size: 0.75rem;
+  }
+
+  .report-description {
+    font-size: 0.85rem;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  .download-btn {
+    font-size: 0.85rem;
+    padding: 0.7rem 1rem;
+  }
+}
+
+/* Extra Small Mobile (max-width: 360px) */
+@media (max-width: 360px) {
+  .company-details-container {
+    padding: 0.6rem;
+  }
+
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem;
+  }
+
+  .history-item .value {
+    font-size: 0.9rem;
+  }
+
+  .leadership-card .member-photo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .member-photo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .member-name {
+    font-size: 0.8rem;
+  }
+
+  .member-title {
+    font-size: 0.65rem;
+  }
+
+  .compendium-report {
+    padding: 0.8rem;
+  }
+
+  .report-modal {
+    padding: 1rem;
+  }
+
+  .report-modal-title {
+    font-size: 1rem;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .report-modal {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  .company-details-container {
+    margin: 0.5rem auto;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .company-details-tabs,
+  .modal-close,
+  .download-btn {
+    display: none;
+  }
+
+  .company-details-container {
+    background: white;
+    color: black;
+  }
+}
   .quarters-table td {
     padding: 0.5rem;
   }

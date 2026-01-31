@@ -195,9 +195,9 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                     <tbody>
                       {Object.entries(report.quarters).map(([quarter, data]) => (
                         <tr key={quarter}>
-                          <td className="quarter-label">{quarter}</td>
-                          <td>{data.date}</td>
-                          <td>
+                          <td className="quarter-label" data-label="Quarter">{quarter}</td>
+                          <td data-label="Date">{data.date}</td>
+                          <td data-label="Action">
                             <button 
                               className="report-link" 
                               onClick={() => setSelectedReport({...data, quarter, reportType: report.name})}
