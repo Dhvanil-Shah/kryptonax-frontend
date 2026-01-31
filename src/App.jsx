@@ -891,15 +891,6 @@ const toggleNotification = async (t) => {
                         </>
                     )}
 
-                    {/* REGION FILTER - Customize Results by Region/Country */}
-                    <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🌍 Filter by Region</h3>
-                    <RegionFilter
-                        selectedRegions={selectedRegions}
-                        selectedStates={selectedStates}
-                        onRegionsChange={setSelectedRegions}
-                        onStatesChange={setSelectedStates}
-                    />
-
                                         <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🚀 Top Movers</h3>
                                         <ul style={{ listStyle: "none", padding: 0 }}>
                                             {filteredTrending.map((t, i) => (
@@ -915,6 +906,25 @@ const toggleNotification = async (t) => {
             )}
 
             <main style={{ flex: "1 1 auto", minWidth: 0, width: "100%" }}>
+                {/* REGION FILTER - Prominent position at top */}
+                <RegionFilter
+                    selectedRegions={selectedRegions}
+                    selectedStates={selectedStates}
+                    onRegionsChange={setSelectedRegions}
+                    onStatesChange={setSelectedStates}
+                />
+                
+                {/* Active Filter Banner - Only show when filters are active */}
+                {!selectedRegions.includes('all') && (
+                    <RegionFilter
+                        selectedRegions={selectedRegions}
+                        selectedStates={selectedStates}
+                        onRegionsChange={setSelectedRegions}
+                        onStatesChange={setSelectedStates}
+                        isCompact={true}
+                    />
+                )}
+
                 <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", marginBottom: "20px", border: "1px solid #2a2e39" }}>
                     <div style={{ display: "flex", flexDirection: "row", gap: "10px", alignItems: "center", width: "100%", flexWrap: "nowrap", overflow: "visible" }}>
                         <div style={{ flex: "10", position: "relative", minWidth: "400px", maxWidth: "900px" }}>
