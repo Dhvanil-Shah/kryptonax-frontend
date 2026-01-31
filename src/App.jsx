@@ -1597,10 +1597,10 @@ const toggleNotification = async (t) => {
                 </aside>
             )}
 
-            <main style={{ flex: 1, minWidth: 0 }}>
+            <main style={{ flex: "1 1 auto", minWidth: 0, width: "100%" }}>
                 <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", marginBottom: "20px", border: "1px solid #2a2e39" }}>
-                    <div style={{ display: "flex", flexDirection: "row", gap: "15px", alignItems: "center" }}>
-                        <div style={{ flex: "1", position: "relative", minWidth: 0 }}>
+                    <div style={{ display: "flex", flexDirection: "row", gap: "15px", alignItems: "stretch", width: "100%" }}>
+                        <div style={{ flex: "1 1 auto", position: "relative", minWidth: "200px" }}>
                             <input 
                                 type="text" 
                                 placeholder="Search (e.g. BTC-USD, AAPL)..." 
@@ -1616,7 +1616,7 @@ const toggleNotification = async (t) => {
                                     color: "white", 
                                     fontSize: "16px", 
                                     boxSizing: "border-box",
-                                    minWidth: 0
+                                    display: "block"
                                 }} 
                             />
                             <svg 
