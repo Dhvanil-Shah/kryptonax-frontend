@@ -200,8 +200,18 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                           <td data-label="Action">
                             <button 
                               className="report-link" 
-                              onClick={() => setSelectedReport({...data, quarter, reportType: report.name})}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedReport({...data, quarter, reportType: report.name});
+                              }}
+                              onTouchEnd={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedReport({...data, quarter, reportType: report.name});
+                              }}
                               title="View Report"
+                              type="button"
                             >
                               📄 View
                             </button>

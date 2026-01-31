@@ -362,10 +362,12 @@
   padding: 1rem 0.75rem;
   border-bottom: 1px solid rgba(79, 172, 254, 0.1);
   transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
 .quarters-table tbody tr {
   transition: all 0.3s ease;
+  pointer-events: auto;
 }
 
 .quarters-table tbody tr:hover {
@@ -389,11 +391,20 @@
   font-size: 0.85rem;
   transition: all 0.3s ease;
   cursor: pointer;
+  -webkit-tap-highlight-color: rgba(79, 172, 254, 0.3);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .report-link:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(79, 172, 254, 0.4);
+}
+
+.report-link:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(79, 172, 254, 0.3);
 }
 
 /* Loading & Error States */
@@ -935,10 +946,15 @@
     align-items: center;
     border: none;
     border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
   }
 
   .quarters-table td:last-child {
     border-bottom: none;
+    pointer-events: auto;
+    z-index: 2;
   }
 
   .quarters-table td::before {
@@ -946,6 +962,7 @@
     font-weight: bold;
     color: #4FACFE;
     min-width: 80px;
+    pointer-events: none;
   }
 
   .quarters-table td:last-child {
@@ -962,6 +979,11 @@
     padding: 0.6rem 1.5rem;
     width: 100%;
     max-width: 100%;
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
+    -webkit-tap-highlight-color: rgba(79, 172, 254, 0.5);
+    touch-action: manipulation;
   }
 
   /* Modal */
