@@ -6,6 +6,7 @@ import {
 import ReactGA from "react-ga4";
 import ChatBot from './ChatBot';
 import CompanyDetails from './CompanyDetails';
+import RegionFilter from './RegionFilter';
 
 // --- CONFIGURATION ---
 // Prefer a local backend when developing (auto-detect via hostname)
