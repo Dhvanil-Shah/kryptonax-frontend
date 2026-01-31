@@ -1600,7 +1600,7 @@ const toggleNotification = async (t) => {
             <main style={{ flex: 1 }}>
                 <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", marginBottom: "20px", border: "1px solid #2a2e39" }}>
                     <div style={{ display: "flex", gap: "10px", justifyContent: "center", position: "relative" }}>
-                        <div style={{ flex: 1, position: "relative" }}>
+                        <div style={{ flex: "1 1 auto", minWidth: "0", position: "relative", maxWidth: "800px" }}>
                             {/* --- ROUNDED SEARCH BOX --- */}
                             <input type="text" placeholder="Search (e.g. BTC-USD, AAPL)..." value={ticker} onChange={(e) => { setTicker(e.target.value.toUpperCase()); setShowSuggestions(true); fetchSuggestions(e.target.value); }} onFocus={onSearchFocus} style={{ width: "100%", padding: "12px", paddingRight: "40px", borderRadius: "30px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white", fontSize: "16px", boxSizing: "border-box" }} />
                             <svg onClick={() => handleSearch()} xmlns="http://www.w3.org/2000/svg" className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#787b86" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", transition: "0.2s" }}> <circle cx="11" cy="11" r="8"></circle> <line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg>
