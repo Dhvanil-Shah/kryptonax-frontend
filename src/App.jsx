@@ -1656,9 +1656,11 @@ const toggleNotification = async (t) => {
           e.target.style.transform = 'scale(1) translateY(0)';
         }}
       >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 13h2v7H3v-7zm4-6h2v13H7V7zm4-4h2v17h-2V3zm4 9h2v8h-2v-8zm4-5h2v13h-2V7z" fill="white"/>
-          <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="0.5" opacity="0.3" fill="none"/>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="white"/>
+          <circle cx="8" cy="10" r="1.5" fill="#4FACFE"/>
+          <circle cx="12" cy="10" r="1.5" fill="#4FACFE"/>
+          <circle cx="16" cy="10" r="1.5" fill="#4FACFE"/>
         </svg>
       </button>
 
