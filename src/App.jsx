@@ -1599,11 +1599,50 @@ const toggleNotification = async (t) => {
 
             <main style={{ flex: 1 }}>
                 <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", marginBottom: "20px", border: "1px solid #2a2e39" }}>
-                    <div style={{ display: "flex", gap: "15px", alignItems: "center", maxWidth: "1400px", margin: "0 auto" }}>
-                        <div style={{ flex: "1 1 auto", minWidth: "0", position: "relative" }}>
-                            {/* --- ROUNDED SEARCH BOX --- */}
-                            <input type="text" placeholder="Search (e.g. BTC-USD, AAPL)..." value={ticker} onChange={(e) => { setTicker(e.target.value.toUpperCase()); setShowSuggestions(true); fetchSuggestions(e.target.value); }} onFocus={onSearchFocus} style={{ width: "100%", padding: "16px 50px 16px 20px", borderRadius: "30px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white", fontSize: "16px", boxSizing: "border-box" }} />
-                            <svg onClick={() => handleSearch()} xmlns="http://www.w3.org/2000/svg" className="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#787b86" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", right: "18px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", transition: "0.2s" }}> <circle cx="11" cy="11" r="8"></circle> <line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg>
+                    <div style={{ display: "flex", flexDirection: "row", gap: "15px", alignItems: "center", maxWidth: "1400px", margin: "0 auto" }}>
+                        <div style={{ flex: "1 1 auto", minWidth: "0", position: "relative", isolation: "isolate" }}>
+                            <input 
+                                type="text" 
+                                placeholder="Search (e.g. BTC-USD, AAPL)..." 
+                                value={ticker} 
+                                onChange={(e) => { setTicker(e.target.value.toUpperCase()); setShowSuggestions(true); fetchSuggestions(e.target.value); }} 
+                                onFocus={onSearchFocus} 
+                                style={{ 
+                                    width: "100%", 
+                                    padding: "16px 50px 16px 20px", 
+                                    borderRadius: "30px", 
+                                    border: "1px solid #2a2e39", 
+                                    backgroundColor: "#131722", 
+                                    color: "white", 
+                                    fontSize: "16px", 
+                                    boxSizing: "border-box",
+                                    display: "block"
+                                }} 
+                            />
+                            <svg 
+                                onClick={() => handleSearch()} 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="22" 
+                                height="22" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="#787b86" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                style={{ 
+                                    position: "absolute", 
+                                    right: "18px", 
+                                    top: "50%", 
+                                    transform: "translateY(-50%)", 
+                                    cursor: "pointer", 
+                                    transition: "0.2s",
+                                    pointerEvents: "auto"
+                                }}
+                            > 
+                                <circle cx="11" cy="11" r="8"></circle> 
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line> 
+                            </svg>
                             {showSuggestions && ( <div style={{ position: "absolute", top: "55px", left: 0, width: "100%", backgroundColor: "#1e222d", zIndex: 100, border: "1px solid #2a2e39", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}> {ticker.length < 2 && searchHistory.length > 0 && ( <div> <div style={{ padding: "5px 10px", fontSize: "11px", color: "#787b86", backgroundColor: "#131722", borderBottom: "1px solid #2a2e39" }}>RECENT SEARCHES</div> {searchHistory.map((h, i) => ( <div key={i} onClick={() => handleSearch(h)} style={{ padding: "10px", cursor: "pointer", borderBottom: "1px solid #2a2e39", display: "flex", justifyContent: "space-between" }}><span style={{color: "#d1d4dc"}}>🕒 {h}</span>{pricesCache[h] && (<span style={{ color: pricesCache[h].color, fontSize: "13px", fontWeight: "bold" }}>{pricesCache[h].price} ({pricesCache[h].percent}%)</span>)}</div> ))} </div> )} {ticker.length >= 2 && suggestions.map(s => ( <div key={s.symbol} onClick={() => handleSearch(s.symbol)} style={{ padding: "12px", cursor: "pointer", borderBottom: "1px solid #2a2e39", display: "flex", justifyContent: "space-between" }}><div><span style={{fontWeight: "bold", color: "#2962ff"}}>{s.symbol}</span><span style={{color: "#787b86", fontSize: "12px", marginLeft: "10px"}}>{s.name}</span></div>{pricesCache[s.symbol] && (<span style={{ color: pricesCache[s.symbol].color, fontSize: "13px", fontWeight: "bold" }}>{pricesCache[s.symbol].price} ({pricesCache[s.symbol].percent}%)</span>)}</div> ))} </div> )}
                         </div>
                         {/* --- ROUNDED DROPDOWN --- */}
