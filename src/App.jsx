@@ -440,7 +440,7 @@ function App() {
     document.body.style.backgroundColor = "#131722"; 
     document.body.style.boxSizing = "border-box";
         fetchTrending(selectedRegions, selectedStates); 
-    fetchGeneralNews();
+    fetchGeneralNews(selectedRegions, selectedStates);
     
     // Load local storage
     const savedWatchLater = localStorage.getItem("watchLaterNews");
@@ -462,6 +462,7 @@ function App() {
   // Update trending data when region filters change
   useEffect(() => {
     fetchTrending(selectedRegions, selectedStates);
+    fetchGeneralNews(selectedRegions, selectedStates);
   }, [selectedRegions, selectedStates]);
 
   useEffect(() => {
@@ -560,7 +561,19 @@ const toggleNotification = async (t) => {
   };
 
   // --- API CALLS ---
-  const fetchGeneralNews = async () => { try { const res = await fetch(`${API_BASE_URL}/news/general`); setGeneralNews(await res.json()); } catch (e) { setGeneralNews([]); } };
+  const fetchGeneralNews = async (regions = ['all'], states = {}) => { 
+    try { 
+      const regionsParam = regions.join(',');
+      const statesParam = Object.keys(states).length > 0 ? encodeURIComponent(JSON.stringify(states)) : '';
+      const url = statesParam 
+        ? `${API_BASE_URL}/news/general?regions=${regionsParam}&states=${statesParam}`
+        : `${API_BASE_URL}/news/general?regions=${regionsParam}`;
+      const res = await fetch(url); 
+      setGeneralNews(await res.json()); 
+    } catch (e) { 
+      setGeneralNews([]); 
+    } 
+  };
   
   const handleAuth = async () => {
       setAuthError(""); setAuthSuccess(""); setIsAppLoading(true);
