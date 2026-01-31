@@ -551,23 +551,28 @@
   color: #a1a1a1;
   font-size: 0.95rem;
   line-height: 1.6;
-  margin: 1.5rem 0 2rem 0;
+  margin: 2rem 0;
 }
 
 .download-btn {
-  padding: 0.9rem 2rem;
+  padding: 0.9rem 1.5rem;
   background: linear-gradient(135deg, rgba(79, 172, 254, 0.3) 0%, rgba(0, 180, 219, 0.3) 100%);
   color: #4FACFE;
   border: 1px solid rgba(79, 172, 254, 0.5);
   border-radius: 10px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: not-allowed;
   transition: all 0.3s ease;
   width: 100%;
+  max-width: 100%;
   text-decoration: none;
   display: inline-block;
   text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .download-btn[href] {
