@@ -4,9 +4,11 @@
 //   CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine 
 // } from 'recharts';
 // import ReactGA from "react-ga4";
+// import ChatBot from './ChatBot';
 
 // // --- CONFIGURATION ---
-// const API_BASE_URL = "https://kryptonax-backend.onrender.com";
+// // Prefer a local backend when developing (auto-detect via hostname)
+// const API_BASE_URL = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) ? 'http://127.0.0.1:8000' : 'https://kryptonax-backend.onrender.com';
 // ReactGA.initialize("G-REEV9CZE52");
 
 // // --- ICONS ---
@@ -164,6 +166,8 @@
 //   const [watchLater, setWatchLater] = useState([]); 
 //   const [activeMenu, setActiveMenu] = useState(null); 
 //   const [notifications, setNotifications] = useState([]); 
+//     const [moverRegion, setMoverRegion] = useState("all");
+//     const [newsCategory, setNewsCategory] = useState("all");
 
 //   // --- AUTH STATES ---
 //   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -184,6 +188,7 @@
 //   const [otpCode, setOtpCode] = useState(""); 
   
 //   const [showAboutModal, setShowAboutModal] = useState(false);
+//   const [showChatBot, setShowChatBot] = useState(false);
 
 //   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
 
@@ -208,7 +213,7 @@
 //     document.body.style.padding = "0"; 
 //     document.body.style.backgroundColor = "#131722"; 
 //     document.body.style.boxSizing = "border-box";
-//     fetchTrending(); 
+//         fetchTrending(moverRegion); 
 //     fetchGeneralNews();
     
 //     // Load local storage
@@ -252,8 +257,18 @@
 //   }, [searchedTicker, chartRange, activeComparison, view]);
 
 //   useEffect(() => { 
-//       if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
+//             if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
 //   }, [chartRange]); 
+
+//     // Re-fetch trending when moverRegion changes and poll periodically
+//     useEffect(() => {
+//         let id = null;
+//         fetchTrending(moverRegion);
+//         try {
+//             id = setInterval(() => fetchTrending(moverRegion), 15000); // refresh every 15s
+//         } catch (e) { }
+//         return () => { if (id) clearInterval(id); };
+//     }, [moverRegion]);
 
 //   // --- FEATURE HANDLERS ---
 //   const toggleWatchLater = (article) => {
@@ -476,7 +491,13 @@
 //       } catch (e) { } 
 //   };
 
-//   const fetchTrending = async () => { try { const res = await fetch(`${API_BASE_URL}/trending`); setTrending(await res.json()); } catch (e) {} };
+//     const fetchTrending = async (region = 'all') => { 
+//         try { 
+//             const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); 
+//             const data = await res.json(); 
+//             setTrending(data);
+//         } catch (e) { console.error('fetchTrending failed', e); } 
+//     };
   
 //   const fetchFavorites = async () => { 
 //       try { 
@@ -497,8 +518,56 @@
 //   const getBorderColor = (s) => (s === "positive" ? "4px solid #00e676" : s === "negative" ? "4px solid #ff1744" : "1px solid #651fff");
   
 //   // --- DERIVED STATE ---
-//   const filteredNews = useMemo(() => news.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [news, newsSearch]);
-//   const filteredGeneralNews = useMemo(() => generalNews.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [generalNews, newsSearch]);
+//     const filteredNews = useMemo(() => news.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [news, newsSearch]);
+
+//     const classifyArticleCategory = (article) => {
+//         const txt = ((article.title || "") + " " + (article.description || "")).toLowerCase();
+//         if (/gold/.test(txt)) return "gold";
+//         if (/crypto|bitcoin|ethereum|btc|eth|coin\b/.test(txt)) return "crypto";
+//         if (/mutual fund|mutual funds|sip|nav|aum|fund house|mf\b/.test(txt)) return "mutual_fund";
+//         if (/real estate|property|mortgage|housing|realty|reits?/i.test(txt)) return "real_estate";
+//         if (/stock|shares|ipo|earnings|revenue|acquisition|merger|tcs|reliance|infy|hdfc|nifty|sensex|nasdaq|nyse|dow\b/.test(txt)) return "stocks";
+//         return "all";
+//     };
+
+//     const inferEntityInfo = (article, cat) => {
+//         const txt = ((article.title || "") + " " + (article.description || "")).toLowerCase();
+//         if (cat === 'stocks') {
+//             if (/bank|hdfc|banking/.test(txt)) return 'Sector: Banking';
+//             if (/oil|energy|exxon|bp|chevron|bp\b/.test(txt)) return 'Sector: Energy';
+//             if (/tech|software|microsoft|apple|google|tcs|infosys|technology/.test(txt)) return 'Sector: Technology';
+//             if (/auto|tesla|ford|gm|vehicle/.test(txt)) return 'Sector: Automotive';
+//             return '';
+//         }
+//         if (cat === 'mutual_fund') {
+//             if (/equity|large cap|large-cap/.test(txt)) return 'Fund Type: Equity / Large Cap';
+//             if (/debt|bond/.test(txt)) return 'Fund Type: Debt';
+//             if (/hybrid/.test(txt)) return 'Fund Type: Hybrid';
+//             if (/sip/.test(txt)) return 'Fund Feature: SIP';
+//             return '';
+//         }
+//         return '';
+//     };
+
+//     const filteredGeneralNews = useMemo(() => {
+//         return generalNews
+//             .filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase()))
+//             .filter(a => {
+//                 if (newsCategory === 'all') return true;
+//                 return classifyArticleCategory(a) === newsCategory;
+//             });
+//     }, [generalNews, newsSearch, newsCategory]);
+
+//     const filteredTrending = useMemo(() => {
+//         if (!trending || trending.length === 0) return [];
+//         if (moverRegion === 'all') return trending;
+//         return trending.filter(t => {
+//             const s = (t.ticker || '').toUpperCase();
+//             if (moverRegion === 'india') return /\.NS|\.BO|RELIANCE|TCS|INFY|HDFCBANK/.test(s);
+//             if (moverRegion === 'us') return !(/\.NS|\.BO/.test(s));
+//             return true;
+//         });
+//     }, [trending, moverRegion]);
 
 //   const sentimentCounts = useMemo(() => [ 
 //       { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, 
@@ -515,7 +584,7 @@
 
 //       <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
 //         <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span></span>{searchedTicker && view === "dashboard" && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}</div>
-//         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
+//         <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>Chat with Bot</span><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
 //       </nav>
 
 //       {/* --- AUTH MODAL --- */}
@@ -590,7 +659,24 @@
 //                         </>
 //                     )}
 
-//                     <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🚀 Global Movers</h3> <ul style={{ listStyle: "none", padding: 0 }}> {trending.map((t, i) => ( <li key={t.ticker} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: "1px solid #2a2e39" }}> <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}> <span style={{ cursor: "pointer", fontWeight: "bold", color: "#d1d4dc" }} onClick={() => handleSearch(t.ticker)}>{t.ticker}</span> <span style={{ color: t.change >= 0 ? "#00e676" : "#ff1744", fontWeight: "bold", fontSize: "14px" }}>{t.change > 0 ? "+" : ""}{t.change}%</span> </div> </li> ))} </ul>
+//                                         <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🚀 Top Movers</h3>
+//                                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
+//                                                 <select value={moverRegion} onChange={(e) => setMoverRegion(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white", cursor: "pointer" }}>
+//                                                         <option value="all">All (Main Mix)</option>
+//                                                         <option value="india">India</option>
+//                                                         <option value="us">US</option>
+//                                                 </select>
+//                                         </div>
+//                                         <ul style={{ listStyle: "none", padding: 0 }}>
+//                                             {filteredTrending.map((t, i) => (
+//                                                 <li key={t.ticker || i} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: "1px solid #2a2e39" }}>
+//                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+//                                                         <span style={{ cursor: "pointer", fontWeight: "bold", color: "#d1d4dc" }} onClick={() => handleSearch(t.ticker)}>{t.ticker}</span>
+//                                                         <span style={{ color: t.change >= 0 ? "#00e676" : "#ff1744", fontWeight: "bold", fontSize: "14px" }}>{t.change > 0 ? "+" : ""}{t.change}%</span>
+//                                                     </div>
+//                                                 </li>
+//                                             ))}
+//                                         </ul>
 //                 </aside>
 //             )}
 
@@ -718,34 +804,57 @@
 //                 ) : (
 //                     <div>
 //                         <h2 style={{color: "white", marginBottom: "20px", borderLeft: "4px solid #2962ff", paddingLeft: "15px"}}>🔥 Trending Market Headlines</h2>
-//                         {/* GENERAL NEWS SEARCH */}
-//                         <div style={{marginBottom: '20px'}}>
-//                             <input type="text" placeholder="Search Headlines..." value={newsSearch} onChange={(e) => setNewsSearch(e.target.value)} style={{ padding: '10px', width: '300px', borderRadius: '30px', border: '1px solid #2a2e39', backgroundColor: '#1e222d', color: 'white' }} />
+//                         {/* GENERAL NEWS SEARCH + CATEGORY FILTERS */}
+//                         <div style={{ marginBottom: '14px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+//                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+//                                 {[
+//                                     { key: 'all', label: 'All (Main Mix)' },
+//                                     { key: 'gold', label: 'Gold' },
+//                                     { key: 'stocks', label: 'Stocks' },
+//                                     { key: 'mutual_fund', label: 'Mutual Funds' },
+//                                     { key: 'crypto', label: 'Crypto Currencies' },
+//                                     { key: 'real_estate', label: 'Real Estate' },
+//                                 ].map(c => (
+//                                     <button key={c.key} onClick={() => setNewsCategory(c.key)} style={{ padding: '8px 12px', borderRadius: '20px', border: newsCategory === c.key ? '1px solid #2962ff' : '1px solid #2a2e39', background: newsCategory === c.key ? '#233759' : '#1e222d', color: 'white', cursor: 'pointer', fontSize: '13px' }}>{c.label}</button>
+//                                 ))}
+//                             </div>
+//                             <div style={{ marginLeft: 'auto' }}>
+//                                 <input type="text" placeholder="Search Headlines..." value={newsSearch} onChange={(e) => setNewsSearch(e.target.value)} style={{ padding: '10px', width: '300px', borderRadius: '30px', border: '1px solid #2a2e39', backgroundColor: '#1e222d', color: 'white' }} />
+//                             </div>
 //                         </div>
 //                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px" }}>
-//                             {filteredGeneralNews.map((article, index) => (
-//                                 <div key={index} className="news-card" style={{ backgroundColor: "#1e222d", borderRadius: "8px", border: "1px solid #2a2e39", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-//                                     <div>
-//                                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-//                                             <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: getBorderColor(article.sentiment).split(' ')[2] }}>{article.sentiment}</span>
-//                                             <span style={{ fontSize: "12px", color: "#787b86" }}>{new Date(article.publishedAt).toLocaleDateString()}</span>
-//                                             <div style={{position: 'relative'}}>
-//                                                 <MoreIcon onClick={() => setActiveMenu(activeMenu === `gen-${index}` ? null : `gen-${index}`)} />
-//                                                 {activeMenu === `gen-${index}` && (
-//                                                     <div className="menu-dropdown">
-//                                                         <div className="menu-item" onClick={() => toggleWatchLater(article)}>
-//                                                             {watchLater.some(w => w.title === article.title) ? "Remove Watch Later" : "Watch Later"}
+//                             {filteredGeneralNews.map((article, index) => {
+//                                 const articleCat = classifyArticleCategory(article);
+//                                 const entityInfo = inferEntityInfo(article, articleCat);
+//                                 const displayCatLabel = articleCat === 'all' ? '' : (articleCat === 'mutual_fund' ? 'Mutual Fund' : articleCat === 'real_estate' ? 'Real Estate' : articleCat === 'crypto' ? 'Crypto' : articleCat === 'gold' ? 'Gold' : 'Stocks');
+//                                 return (
+//                                     <div key={index} className="news-card" style={{ backgroundColor: "#1e222d", borderRadius: "8px", border: "1px solid #2a2e39", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+//                                         <div>
+//                                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+//                                                 <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: getBorderColor(article.sentiment).split(' ')[2] }}>{article.sentiment}</span>
+//                                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+//                                                     <span style={{ fontSize: "12px", color: "#787b86" }}>{new Date(article.publishedAt).toLocaleDateString()}</span>
+//                                                     {displayCatLabel && <span style={{ fontSize: '11px', background: '#2a2e39', padding: '4px 8px', borderRadius: '12px', color: '#d1d4dc', border: '1px solid #2a2e39' }}>{displayCatLabel}</span>}
+//                                                 </div>
+//                                                 <div style={{position: 'relative'}}>
+//                                                     <MoreIcon onClick={() => setActiveMenu(activeMenu === `gen-${index}` ? null : `gen-${index}`)} />
+//                                                     {activeMenu === `gen-${index}` && (
+//                                                         <div className="menu-dropdown">
+//                                                             <div className="menu-item" onClick={() => toggleWatchLater(article)}>
+//                                                                 {watchLater.some(w => w.title === article.title) ? "Remove Watch Later" : "Watch Later"}
+//                                                             </div>
 //                                                         </div>
-//                                                     </div>
-//                                                 )}
+//                                                     )}
+//                                                 </div>
 //                                             </div>
+//                                             <h3 style={{ margin: "0 0 10px 0", fontSize: "16px", lineHeight: "1.4" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "#d1d4dc" }}>{article.title}</a></h3>
+//                                             <p style={{ fontSize: "13px", color: "#787b86", lineHeight: "1.5" }}>{article.description ? article.description.substring(0, 100) + "..." : "Click to read more."}</p>
+//                                             {entityInfo && ( <div style={{ marginTop: '8px', fontSize: '12px', color: '#9fb3ff' }}>{entityInfo}</div> )}
 //                                         </div>
-//                                         <h3 style={{ margin: "0 0 10px 0", fontSize: "16px", lineHeight: "1.4" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "#d1d4dc" }}>{article.title}</a></h3>
-//                                         <p style={{ fontSize: "13px", color: "#787b86", lineHeight: "1.5" }}>{article.description ? article.description.substring(0, 100) + "..." : "Click to read more."}</p>
+//                                         <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #2a2e39" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#2962ff", textDecoration: "none", fontWeight: "bold" }}>Read Full Story →</a></div>
 //                                     </div>
-//                                     <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #2a2e39" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#2962ff", textDecoration: "none", fontWeight: "bold" }}>Read Full Story →</a></div>
-//                                 </div>
-//                             ))}
+//                                 );
+//                             })}
 //                         </div>
 //                     </div>
 //                 )}
@@ -753,13 +862,57 @@
 //         </div>
 //       )}
 //       <footer style={{ backgroundColor: "#1e222d", borderTop: "1px solid #2a2e39", padding: "60px 20px", marginTop: "auto" }}> <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "40px" }}> <div style={{ maxWidth: "300px" }}> <h2 style={{ fontSize: "24px", color: "#ffffff", marginBottom: "15px" }}><span style={{ color: "#2962ff" }}>KRYPTONAX</span></h2> <p style={{ color: "#787b86", fontSize: "14px", lineHeight: "1.6" }}>The #1 financial intelligence platform for students and professionals. Real-time data, AI sentiment analysis, and institutional-grade charting in one place.</p> </div> <div style={{ display: "flex", gap: "60px", flexWrap: "wrap" }}> <div> <h4 style={{ color: "white", marginBottom: "20px" }}>Product</h4> <ul style={{ listStyle: "none", padding: 0, color: "#787b86", fontSize: "14px", lineHeight: "2.5" }}> <li>Charting</li> <li>AI Sentiment</li> <li>Screeners</li> <li>Pricing</li> </ul> </div> </div> </div> <div style={{ textAlign: "center", borderTop: "1px solid #2a2e39", marginTop: "40px", paddingTop: "20px", color: "#555", fontSize: "12px" }}>&copy; 2024 Kryptonax Financial Inc. All rights reserved. Data provided by Yahoo Finance & NewsAPI.</div> </footer>
+
+//       {/* --- FLOATING ACTION BUTTON (ChatBot FAB) --- */}
+//       <button
+//         onClick={() => setShowChatBot(true)}
+//         style={{
+//           position: 'fixed',
+//           bottom: '30px',
+//           right: '30px',
+//           width: '64px',
+//           height: '64px',
+//           borderRadius: '50%',
+//           background: 'linear-gradient(135deg, #4FACFE 0%, #00B4DB 100%)',
+//           border: 'none',
+//           color: 'white',
+//           cursor: 'pointer',
+//           boxShadow: '0 6px 25px rgba(79, 172, 254, 0.5)',
+//           display: 'flex',
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//           zIndex: 999,
+//           transition: 'all 0.3s ease'
+//         }}
+//         onMouseEnter={(e) => {
+//           e.target.style.boxShadow = '0 8px 35px rgba(79, 172, 254, 0.7)';
+//           e.target.style.transform = 'scale(1.1) translateY(-3px)';
+//         }}
+//         onMouseLeave={(e) => {
+//           e.target.style.boxShadow = '0 6px 25px rgba(79, 172, 254, 0.5)';
+//           e.target.style.transform = 'scale(1) translateY(0)';
+//         }}
+//       >
+//         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+//           <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="white"/>
+//           <circle cx="8" cy="10" r="1.5" fill="#4FACFE"/>
+//           <circle cx="12" cy="10" r="1.5" fill="#4FACFE"/>
+//           <circle cx="16" cy="10" r="1.5" fill="#4FACFE"/>
+//         </svg>
+//       </button>
+
+//       {/* --- CHATBOT MODAL --- */}
+//       <ChatBot
+//         isOpen={showChatBot}
+//         onClose={() => setShowChatBot(false)}
+//         apiBaseUrl={API_BASE_URL}
+//         ticker={searchedTicker}
+//       />
 //     </div>
 //   );
 // }
 
 // export default App;
-
-
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
@@ -768,6 +921,7 @@ import {
 } from 'recharts';
 import ReactGA from "react-ga4";
 import ChatBot from './ChatBot';
+import CompanyDetails from './CompanyDetails';
 
 // --- CONFIGURATION ---
 // Prefer a local backend when developing (auto-detect via hostname)
@@ -1621,6 +1775,11 @@ const toggleNotification = async (t) => {
                         </div>
                     </div>
                 )}
+                
+                {/* COMPANY DETAILS SECTION - SHOWS BELOW SEARCH RESULTS */}
+                {searchedTicker && (
+                    <CompanyDetails ticker={searchedTicker} apiBaseUrl={API_BASE_URL} />
+                )}
             </main>
         </div>
       )}
@@ -1676,5 +1835,8 @@ const toggleNotification = async (t) => {
 }
 
 export default App;
+
+
+
 
 
