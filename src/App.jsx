@@ -417,6 +417,9 @@ function App() {
   const [showChatBot, setShowChatBot] = useState(false);
   const [showNewsReader, setShowNewsReader] = useState(false);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+  const [fullPageNewsView, setFullPageNewsView] = useState(false);
+  const [newsReaderRegions, setNewsReaderRegions] = useState(['all']);
+  const [newsReaderStates, setNewsReaderStates] = useState({});
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
 
@@ -838,21 +841,31 @@ const toggleNotification = async (t) => {
 
   // Keyboard navigation for news reader - AFTER filteredGeneralNews is defined
   useEffect(() => {
-    if (!showNewsReader) return;
+    if (!showNewsReader && !fullPageNewsView) return;
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      const maxIndex = fullPageNewsView ? generalNews.length - 1 : filteredGeneralNews.length - 1;
+      
+      if (e.key === 'Escape' && showNewsReader) {
         setShowNewsReader(false);
-      } else if (e.key === 'ArrowLeft' && currentNewsIndex > 0) {
-        setCurrentNewsIndex(currentNewsIndex - 1);
-      } else if (e.key === 'ArrowRight' && currentNewsIndex < filteredGeneralNews.length - 1) {
-        setCurrentNewsIndex(currentNewsIndex + 1);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentNewsIndex > 0) {
+          setCurrentNewsIndex(currentNewsIndex - 1);
+          if (fullPageNewsView) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (currentNewsIndex < maxIndex) {
+          setCurrentNewsIndex(currentNewsIndex + 1);
+          if (fullPageNewsView) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showNewsReader, currentNewsIndex, filteredGeneralNews.length]);
+  }, [showNewsReader, fullPageNewsView, currentNewsIndex, filteredGeneralNews.length, generalNews.length]);
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
@@ -860,8 +873,19 @@ const toggleNotification = async (t) => {
       {(isAppLoading || loading) && ( <div className="loading-overlay"> <div className="spinner"></div> </div> )}
 
       <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
-        <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span></span>{searchedTicker && view === "dashboard" && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}</div>
-        <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>Chat with Bot</span><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
+        <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}>
+          <span onClick={() => { setView("dashboard"); setFullPageNewsView(false); handleReset(); }} style={{cursor: "pointer"}}>
+            <span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span>
+          </span>
+          {searchedTicker && view === "dashboard" && !fullPageNewsView && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}
+        </div>
+        <div style={{display: "flex", alignItems: "center", gap: "25px"}}>
+          {!fullPageNewsView && <button onClick={() => { setView("dashboard"); setFullPageNewsView(false); handleReset(); }} style={{ fontSize: "14px", padding: "8px 16px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.3s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2962ff"; e.currentTarget.style.borderColor = "#2962ff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.borderColor = "#787b86"; }}>🏠 Home</button>}
+          <span onClick={() => { setFullPageNewsView(true); setView("dashboard"); }} style={{cursor: "pointer", color: fullPageNewsView ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px"}}>📰 Read Top Trending News</span>
+          <span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>💬 Chat with Bot</span>
+          <span onClick={() => { setView("about"); setFullPageNewsView(false); }} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>
+          {userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}
+          {token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
       {/* --- AUTH MODAL --- */}
@@ -909,6 +933,244 @@ const toggleNotification = async (t) => {
         <div style={{ flex: 1, color: "#d1d4dc", paddingBottom: "60px", textAlign: "center", padding: "80px 20px" }}>
             <h1 style={{ fontSize: "48px", marginBottom: "20px", color: "white" }}>Empowering Your <span style={{color: "#2962ff"}}>Financial Future</span></h1>
             <button onClick={() => setView("dashboard")} style={{ marginTop: "30px", padding: "12px 30px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", fontSize: "16px", cursor: "pointer", fontWeight: "bold" }}>Start Analyzing</button>
+        </div>
+      ) : fullPageNewsView ? (
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "40px 20px", minHeight: "calc(100vh - 200px)" }}>
+          {/* Region Filter */}
+          <div style={{ marginBottom: "30px" }}>
+            <RegionFilter
+              selectedRegions={newsReaderRegions}
+              selectedStates={newsReaderStates}
+              onRegionsChange={setNewsReaderRegions}
+              onStatesChange={setNewsReaderStates}
+            />
+          </div>
+
+          {/* Full Page News Reader */}
+          {(() => {
+            const newsToShow = generalNews
+              .filter(n => {
+                if (newsReaderRegions.includes('all')) return true;
+                // Simple region filtering - you can enhance this
+                return true;
+              });
+            
+            if (newsToShow.length === 0) {
+              return (
+                <div style={{ textAlign: 'center', padding: '100px 20px', color: '#787b86' }}>
+                  <div style={{ fontSize: '72px', marginBottom: '20px' }}>📰</div>
+                  <h2 style={{ color: '#d1d4dc', marginBottom: '10px' }}>No News Available</h2>
+                  <p>Try adjusting your region filters</p>
+                </div>
+              );
+            }
+
+            const currentArticle = newsToShow[currentNewsIndex] || newsToShow[0];
+            const articleCat = classifyArticleCategory(currentArticle);
+            const categoryBadge = getCategoryBadge(articleCat);
+            const entityInfo = inferEntityInfo(currentArticle, articleCat);
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '30px', alignItems: 'start' }}>
+                {/* Main Content */}
+                <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '40px', border: '1px solid #2a2e39' }}>
+                  {/* Category and Sentiment Badges */}
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '25px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '600', padding: '8px 16px', borderRadius: '25px', backgroundColor: categoryBadge.bg, color: categoryBadge.color, border: `1.5px solid ${categoryBadge.color}50`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '18px' }}>{categoryBadge.icon}</span>
+                      <span>{categoryBadge.label}</span>
+                    </span>
+                    <span style={{ fontSize: "13px", fontWeight: "600", padding: "8px 16px", borderRadius: "25px", backgroundColor: getBorderColor(currentArticle.sentiment).split(' ')[2] === '#00e676' ? 'rgba(0, 230, 118, 0.2)' : getBorderColor(currentArticle.sentiment).split(' ')[2] === '#ff1744' ? 'rgba(255, 23, 68, 0.2)' : 'rgba(255, 215, 0, 0.2)', color: getBorderColor(currentArticle.sentiment).split(' ')[2], border: `1.5px solid ${getBorderColor(currentArticle.sentiment).split(' ')[2]}50` }}>
+                      {currentArticle.sentiment === 'positive' ? '📈' : currentArticle.sentiment === 'negative' ? '📉' : '➖'} {currentArticle.sentiment.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: "13px", color: "#787b86", padding: "8px 16px", backgroundColor: "#2a2e39", borderRadius: "25px", marginLeft: 'auto' }}>
+                      🗓️ {new Date(currentArticle.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h1 style={{ color: "#ffffff", fontSize: "36px", lineHeight: "1.3", margin: "0 0 25px 0", fontWeight: "700" }}>
+                    {currentArticle.title}
+                  </h1>
+
+                  {/* Entity Info */}
+                  {entityInfo && (
+                    <div style={{ marginBottom: '30px', padding: '16px 20px', backgroundColor: 'rgba(41, 98, 255, 0.15)', borderLeft: '4px solid #2962ff', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '14px', color: '#9fb3ff', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '20px' }}>📊</span>
+                        <span>{entityInfo}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Image */}
+                  {currentArticle.urlToImage && (
+                    <div style={{ marginBottom: '35px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #2a2e39', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
+                      <img 
+                        src={currentArticle.urlToImage} 
+                        alt={currentArticle.title}
+                        style={{ width: '100%', height: 'auto', maxHeight: '500px', objectFit: 'cover', display: 'block' }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  <div style={{ fontSize: '18px', color: '#d1d4dc', lineHeight: '1.9', marginBottom: '30px', fontFamily: 'Georgia, serif' }}>
+                    <p style={{ marginBottom: '20px' }}>{currentArticle.description || currentArticle.content || 'No additional details available.'}</p>
+                    {currentArticle.content && currentArticle.content !== currentArticle.description && (
+                      <p style={{ color: '#a1a7b4' }}>{currentArticle.content}</p>
+                    )}
+                  </div>
+
+                  {/* Source Card */}
+                  {currentArticle.source?.name && (
+                    <div style={{ padding: '20px', backgroundColor: '#131722', borderRadius: '12px', marginBottom: '30px', border: '1px solid #2a2e39', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#787b86', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>Published By</div>
+                        <div style={{ fontSize: '16px', color: '#d1d4dc', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '20px' }}>📰</span>
+                          <span>{currentArticle.source.name}</span>
+                        </div>
+                      </div>
+                      {currentArticle.author && (
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '12px', color: '#787b86', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>Author</div>
+                          <div style={{ fontSize: '14px', color: '#d1d4dc', fontWeight: '600' }}>{currentArticle.author}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Read Full Article Button */}
+                  <a 
+                    href={currentArticle.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      gap: '12px',
+                      padding: '18px 32px', 
+                      borderRadius: '12px', 
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white', 
+                      fontSize: '16px', 
+                      fontWeight: 'bold',
+                      textDecoration: 'none',
+                      transition: 'all 0.3s',
+                      boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => { 
+                      e.currentTarget.style.transform = 'translateY(-3px)'; 
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.6)';
+                    }}
+                    onMouseLeave={(e) => { 
+                      e.currentTarget.style.transform = 'translateY(0)'; 
+                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+                    }}
+                  >
+                    <span style={{ fontSize: '20px' }}>🔗</span>
+                    <span>Read Full Article on {currentArticle.source?.name || 'Publisher\'s Website'}</span>
+                    <span style={{ fontSize: '20px' }}>→</span>
+                  </a>
+                </div>
+
+                {/* Sidebar Navigation */}
+                <div style={{ position: 'sticky', top: '100px' }}>
+                  {/* Article Counter */}
+                  <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '20px', border: '1px solid #2a2e39', marginBottom: '20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', color: '#787b86', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Article</div>
+                    <div style={{ fontSize: '32px', color: '#2962ff', fontWeight: 'bold' }}>
+                      {currentNewsIndex + 1} <span style={{ fontSize: '20px', color: '#787b86' }}>of {newsToShow.length}</span>
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '25px', border: '1px solid #2a2e39' }}>
+                    <h3 style={{ color: '#d1d4dc', fontSize: '16px', marginBottom: '20px', textAlign: 'center' }}>Navigation</h3>
+                    
+                    <button 
+                      onClick={() => setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1))}
+                      disabled={currentNewsIndex === 0}
+                      style={{ 
+                        width: '100%',
+                        padding: "16px 24px", 
+                        borderRadius: "10px", 
+                        border: "none", 
+                        background: currentNewsIndex === 0 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
+                        color: currentNewsIndex === 0 ? "#787b86" : "white",
+                        fontSize: "15px", 
+                        fontWeight: "700",
+                        cursor: currentNewsIndex === 0 ? "not-allowed" : "pointer",
+                        transition: "all 0.3s",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "10px",
+                        marginBottom: '15px',
+                        boxShadow: currentNewsIndex === 0 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
+                      }}
+                      onMouseEnter={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
+                      onMouseLeave={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
+                    >
+                      <span style={{ fontSize: '20px' }}>⬆️</span>
+                      <span>Previous News</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setCurrentNewsIndex(Math.min(newsToShow.length - 1, currentNewsIndex + 1))}
+                      disabled={currentNewsIndex === newsToShow.length - 1}
+                      style={{ 
+                        width: '100%',
+                        padding: "16px 24px", 
+                        borderRadius: "10px", 
+                        border: "none", 
+                        background: currentNewsIndex === newsToShow.length - 1 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
+                        color: currentNewsIndex === newsToShow.length - 1 ? "#787b86" : "white",
+                        fontSize: "15px", 
+                        fontWeight: "700",
+                        cursor: currentNewsIndex === newsToShow.length - 1 ? "not-allowed" : "pointer",
+                        transition: "all 0.3s",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "10px",
+                        boxShadow: currentNewsIndex === newsToShow.length - 1 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
+                      }}
+                      onMouseEnter={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
+                      onMouseLeave={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
+                    >
+                      <span>Next News</span>
+                      <span style={{ fontSize: '20px' }}>⬇️</span>
+                    </button>
+
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#131722', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '12px', color: '#787b86', marginBottom: '8px' }}>Quick Navigation</div>
+                      <div style={{ fontSize: '11px', color: '#9fb3ff', lineHeight: '1.6' }}>
+                        <div>⬆️ Scroll Up / Arrow Up</div>
+                        <div>⬇️ Scroll Down / Arrow Down</div>
+                        <div>🏠 Home - Return to Dashboard</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Related News Preview */}
+                  {newsToShow[currentNewsIndex + 1] && (
+                    <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '20px', border: '1px solid #2a2e39', marginTop: '20px' }}>
+                      <h4 style={{ color: '#787b86', fontSize: '12px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Article</h4>
+                      <div style={{ fontSize: '14px', color: '#d1d4dc', lineHeight: '1.4', fontWeight: '600' }}>
+                        {newsToShow[currentNewsIndex + 1].title.substring(0, 100)}...
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       ) : (
         <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
@@ -1439,10 +1701,24 @@ const toggleNotification = async (t) => {
                       </div>
                     )}
 
-                    {/* Description */}
+                    {/* Description with more detail */}
                     <div style={{ fontSize: '16px', color: '#d1d4dc', lineHeight: '1.8', marginBottom: '25px' }}>
-                      {article.description || article.content || 'No additional details available. Click "Read Full Article" below to view the complete story on the publisher\'s website.'}
+                      <p style={{ marginBottom: '15px', fontSize: '17px', fontWeight: '500' }}>{article.description || 'No description available.'}</p>
+                      {article.content && article.content !== article.description && (
+                        <p style={{ color: '#a1a7b4', fontSize: '15px', lineHeight: '1.7' }}>{article.content}</p>
+                      )}
+                      {!article.description && !article.content && (
+                        <p style={{ color: '#787b86', fontStyle: 'italic' }}>Click "Read Full Article" below to view the complete story on the publisher's website.</p>
+                      )}
                     </div>
+
+                    {/* Additional Meta Info */}
+                    {article.author && (
+                      <div style={{ padding: '12px', backgroundColor: '#131722', borderRadius: '8px', marginBottom: '15px', border: '1px solid #2a2e39', fontSize: '13px' }}>
+                        <span style={{ color: '#787b86' }}>Author: </span>
+                        <span style={{ color: '#d1d4dc', fontWeight: '600' }}>{article.author}</span>
+                      </div>
+                    )}
 
                     {/* Source */}
                     {article.source?.name && (
