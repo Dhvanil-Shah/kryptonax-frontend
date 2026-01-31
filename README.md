@@ -1,4 +1,4 @@
-# React + Vite
+git commit -m "Added Top Movers tabs and News Categories"# React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
