@@ -1048,40 +1048,42 @@ const SentimentGauge = ({ data, newsCounts }) => {
     const currentVolume = volumes[len - 1];
     const volumeTrend = currentVolume > avgVolume ? 1 : -1;
     
-    // News sentiment
+    // News sentiment (increased weight)
     const pos = newsCounts.find(n => n.name === 'Positive')?.value || 0;
     const neg = newsCounts.find(n => n.name === 'Negative')?.value || 0;
-    const newsScore = (pos - neg) * 3;
+    const totalNews = pos + neg;
+    const newsRatio = totalNews > 0 ? (pos - neg) / totalNews : 0;
+    const newsScore = newsRatio * 25; // Increased from 3 to 25 for stronger impact
     
     // Calculate technical score
     const rsi = calculateRSI();
     let score = 0;
     
-    // RSI signals (30-70 range)
-    if (rsi > 70) score -= 20;
-    else if (rsi > 60) score += 5;
-    else if (rsi < 30) score += 20;
-    else if (rsi < 40) score -= 5;
-    else score += 10;
+    // RSI signals (30-70 range) - reduced weight
+    if (rsi > 70) score -= 15;
+    else if (rsi > 60) score += 3;
+    else if (rsi < 30) score += 15;
+    else if (rsi < 40) score -= 3;
+    else score += 5;
     
-    // Moving average signals
-    if (current > sma20) score += 15;
-    if (current > sma50) score += 10;
-    if (sma20 > sma50) score += 10;
-    if (current < sma20) score -= 15;
-    if (current < sma50) score -= 10;
+    // Moving average signals - reduced weight
+    if (current > sma20) score += 10;
+    if (current > sma50) score += 8;
+    if (sma20 > sma50) score += 7;
+    if (current < sma20) score -= 10;
+    if (current < sma50) score -= 8;
     
-    // MACD signal
-    if (macd > 0) score += 10;
-    else score -= 10;
+    // MACD signal - reduced weight
+    if (macd > 0) score += 8;
+    else score -= 8;
     
-    // Momentum
-    score += momentum * 2;
+    // Momentum - reduced weight
+    score += momentum * 1.5;
     
-    // Volume
-    score += volumeTrend * 5;
+    // Volume - reduced weight
+    score += volumeTrend * 3;
     
-    // News sentiment
+    // News sentiment - now has much more impact
     score += newsScore;
     
     // Convert to rotation (-90 to 90)
