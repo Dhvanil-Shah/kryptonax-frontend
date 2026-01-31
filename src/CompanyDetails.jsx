@@ -15,6 +15,7 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
       try {
         setLoading(true);
         setError(null);
+        setSelectedReport(null); // Clear any previous report selection
 
         const [historyRes, boardRes, compendiumRes] = await Promise.all([
           fetch(`${apiBaseUrl}/company-history/${ticker}`),
@@ -129,20 +130,49 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           <div className="board-section">
             <h2>Board Members & Leadership</h2>
             <p className="board-count">{boardMembers.board_size} members</p>
-            <div className="board-grid">
-              {boardMembers.board_members.map((member, idx) => (
-                <div key={idx} className="board-member-card">
-                  <img src={member.photo_url} alt={member.name} className="member-photo" />
-                  <h3 className="member-name">{member.name}</h3>
-                  <p className="member-title">{member.title}</p>
-                  {member.pay > 0 && (
-                    <p className="member-pay">
-                      ${(member.pay / 1e6).toFixed(2)}M
-                    </p>
-                  )}
+            
+            {/* Leadership Section - Owner and Chairperson */}
+            {boardMembers.leadership && boardMembers.leadership.length > 0 && (
+              <div className="leadership-section">
+                <h3>Leadership</h3>
+                <div className="leadership-grid">
+                  {boardMembers.leadership.map((member, idx) => (
+                    <div key={`leadership-${idx}`} className="leadership-card">
+                      <div className="leadership-badge">{member.role}</div>
+                      <img src={member.photo_url} alt={member.name} className="member-photo-large" />
+                      <h4 className="member-name-large">{member.name}</h4>
+                      <p className="member-title-large">{member.title}</p>
+                      {member.pay > 0 && (
+                        <p className="member-pay-large">
+                          ${(member.pay / 1e6).toFixed(2)}M
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+            
+            {/* Board Members Grid */}
+            {boardMembers.board_members && boardMembers.board_members.length > 0 && (
+              <div className="board-members-section">
+                <h3>Board Members</h3>
+                <div className="board-grid">
+                  {boardMembers.board_members.map((member, idx) => (
+                    <div key={`board-${idx}`} className="board-member-card">
+                      <img src={member.photo_url} alt={member.name} className="member-photo" />
+                      <h4 className="member-name">{member.name}</h4>
+                      <p className="member-title">{member.title}</p>
+                      {member.pay > 0 && (
+                        <p className="member-pay">
+                          ${(member.pay / 1e6).toFixed(2)}M
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
