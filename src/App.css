@@ -18,6 +18,19 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Compact dropdown menu styling */
+select option {
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  background-color: #131722 !important;
+  color: white !important;
+}
+
+select {
+  line-height: 1.2 !important;
+}
+
 #root {
   width: 100%;
   min-height: 100vh;
