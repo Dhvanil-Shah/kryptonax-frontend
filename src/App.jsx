@@ -1009,21 +1009,90 @@ const generateUniquePrediction = (historyData, ticker) => {
 // --- FLUID GAUGE ---
 const SentimentGauge = ({ data, newsCounts }) => {
   const getFluidSentiment = () => {
-    if (!data || data.length < 5) return { rotation: 0, text: "Analyzing...", color: "#FFD700" };
+    if (!data || data.length < 14) return { rotation: 0, text: "Analyzing...", color: "#FFD700" };
+    
     const prices = data.map(d => d.price);
-    const current = prices[prices.length - 1];
-    const start = prices[0];
-    const changePct = ((current - start) / start) * 100; 
+    const volumes = data.map(d => d.volume || 0);
+    const len = prices.length;
+    
+    // Calculate RSI (14-period)
+    const calculateRSI = () => {
+      let gains = 0, losses = 0;
+      for (let i = len - 14; i < len; i++) {
+        const change = prices[i] - prices[i - 1];
+        if (change > 0) gains += change;
+        else losses -= change;
+      }
+      const avgGain = gains / 14;
+      const avgLoss = losses / 14;
+      if (avgLoss === 0) return 100;
+      const rs = avgGain / avgLoss;
+      return 100 - (100 / (1 + rs));
+    };
+    
+    // Calculate Moving Averages
+    const sma20 = prices.slice(-20).reduce((a, b) => a + b, 0) / Math.min(20, prices.length);
+    const sma50 = prices.slice(-50).reduce((a, b) => a + b, 0) / Math.min(50, prices.length);
+    const current = prices[len - 1];
+    
+    // Calculate MACD
+    const ema12 = prices.slice(-12).reduce((a, b) => a + b, 0) / Math.min(12, prices.length);
+    const ema26 = prices.slice(-26).reduce((a, b) => a + b, 0) / Math.min(26, prices.length);
+    const macd = ema12 - ema26;
+    
+    // Calculate momentum
+    const momentum = ((current - prices[Math.max(0, len - 10)]) / prices[Math.max(0, len - 10)]) * 100;
+    
+    // Volume trend
+    const avgVolume = volumes.slice(-20).reduce((a, b) => a + b, 0) / Math.min(20, volumes.length);
+    const currentVolume = volumes[len - 1];
+    const volumeTrend = currentVolume > avgVolume ? 1 : -1;
+    
+    // News sentiment
     const pos = newsCounts.find(n => n.name === 'Positive')?.value || 0;
     const neg = newsCounts.find(n => n.name === 'Negative')?.value || 0;
-    const newsScore = (pos - neg) * 2; 
-    let totalScore = (changePct * 10) + newsScore; 
-    const rotation = Math.max(-90, Math.min(90, totalScore * 3)); 
+    const newsScore = (pos - neg) * 3;
+    
+    // Calculate technical score
+    const rsi = calculateRSI();
+    let score = 0;
+    
+    // RSI signals (30-70 range)
+    if (rsi > 70) score -= 20;
+    else if (rsi > 60) score += 5;
+    else if (rsi < 30) score += 20;
+    else if (rsi < 40) score -= 5;
+    else score += 10;
+    
+    // Moving average signals
+    if (current > sma20) score += 15;
+    if (current > sma50) score += 10;
+    if (sma20 > sma50) score += 10;
+    if (current < sma20) score -= 15;
+    if (current < sma50) score -= 10;
+    
+    // MACD signal
+    if (macd > 0) score += 10;
+    else score -= 10;
+    
+    // Momentum
+    score += momentum * 2;
+    
+    // Volume
+    score += volumeTrend * 5;
+    
+    // News sentiment
+    score += newsScore;
+    
+    // Convert to rotation (-90 to 90)
+    const rotation = Math.max(-90, Math.min(90, score * 1.5));
+    
     let text = "Neutral", color = "#FFD700";
-    if (rotation > 45) { text = "Strong Buy"; color = "#00e676"; }
-    else if (rotation > 10) { text = "Buy"; color = "#69f0ae"; }
-    else if (rotation < -45) { text = "Strong Sell"; color = "#ff1744"; }
-    else if (rotation < -10) { text = "Sell"; color = "#ff5252"; }
+    if (rotation > 50) { text = "Strong Buy"; color = "#00e676"; }
+    else if (rotation > 15) { text = "Buy"; color = "#69f0ae"; }
+    else if (rotation < -50) { text = "Strong Sell"; color = "#ff1744"; }
+    else if (rotation < -15) { text = "Sell"; color = "#ff5252"; }
+    
     return { rotation, text, color };
   };
   const { rotation, text, color } = getFluidSentiment();
