@@ -243,7 +243,9 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                     ? "Comprehensive equity valuation analysis, stock performance metrics, dividend information, and investment recommendations for the period."
                     : selectedReport.reportType === "ESG Compendium"
                     ? "Environmental, Social, and Governance performance report covering sustainability initiatives, corporate responsibility, and ESG score analysis."
-                    : "Complete financial results including revenue, earnings, profitability metrics, cash flow analysis, and year-over-year performance comparison."}
+                    : selectedReport.reportType === "Results Compendium"
+                    ? "Complete financial results including revenue, earnings, profitability metrics, cash flow analysis, and year-over-year performance comparison."
+                    : "Financial report and analysis for the selected period."}
                 </p>
                 <button className="download-btn" disabled>
                   📥 Download Report (Coming Soon)
