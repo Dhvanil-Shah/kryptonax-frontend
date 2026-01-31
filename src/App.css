@@ -19,16 +19,33 @@ html, body {
 }
 
 /* Compact dropdown menu styling */
+select {
+  line-height: 1 !important;
+  height: auto !important;
+}
+
 select option {
-  padding: 4px 8px !important;
-  font-size: 13px !important;
-  line-height: 1.2 !important;
+  padding: 2px 4px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  height: auto !important;
+  min-height: 0 !important;
   background-color: #131722 !important;
   color: white !important;
 }
 
-select {
-  line-height: 1.2 !important;
+/* Force compact dropdown on all browsers */
+select::-webkit-scrollbar {
+  width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+  background: #131722;
+}
+
+select::-webkit-scrollbar-thumb {
+  background: #2a2e39;
+  border-radius: 4px;
 }
 
 #root {
