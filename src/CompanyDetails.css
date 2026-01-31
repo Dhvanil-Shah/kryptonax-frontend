@@ -565,6 +565,21 @@
   cursor: not-allowed;
   transition: all 0.3s ease;
   width: 100%;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.download-btn[href] {
+  cursor: pointer;
+  background: linear-gradient(135deg, #4FACFE 0%, #00B4DB 100%);
+  color: #fff;
+}
+
+.download-btn[href]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+  opacity: 0.9;
 }
 
 .download-btn:hover:not(:disabled) {

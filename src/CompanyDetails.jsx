@@ -245,11 +245,19 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                     ? "Environmental, Social, and Governance performance report covering sustainability initiatives, corporate responsibility, and ESG score analysis."
                     : selectedReport.reportType === "Results Compendium"
                     ? "Complete financial results including revenue, earnings, profitability metrics, cash flow analysis, and year-over-year performance comparison."
+                    : selectedReport.reportType === "Annual General Meeting"
+                    ? "Annual general meeting report including proxy statement, shareholder resolutions, board elections, and executive compensation details."
                     : "Financial report and analysis for the selected period."}
                 </p>
-                <button className="download-btn" disabled>
-                  📥 Download Report (Coming Soon)
-                </button>
+                {selectedReport.available && selectedReport.url ? (
+                  <a href={selectedReport.url} target="_blank" rel="noopener noreferrer" className="download-btn">
+                    📥 Open Report ({selectedReport.source})
+                  </a>
+                ) : (
+                  <button className="download-btn" disabled>
+                    📥 Download Report (Coming Soon)
+                  </button>
+                )}
               </div>
             </div>
           </div>
