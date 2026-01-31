@@ -237,7 +237,13 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                   <span className="report-status">Available for Download</span>
                 </div>
                 <p className="report-description">
-                  This comprehensive financial report contains detailed analysis, metrics, and insights for the selected period.
+                  {selectedReport.reportType === "Credit Summary" 
+                    ? "Detailed credit analysis including financial metrics, debt ratios, creditworthiness assessment, and risk analysis for the selected period."
+                    : selectedReport.reportType === "Equity Note"
+                    ? "Comprehensive equity valuation analysis, stock performance metrics, dividend information, and investment recommendations for the period."
+                    : selectedReport.reportType === "ESG Compendium"
+                    ? "Environmental, Social, and Governance performance report covering sustainability initiatives, corporate responsibility, and ESG score analysis."
+                    : "Complete financial results including revenue, earnings, profitability metrics, cash flow analysis, and year-over-year performance comparison."}
                 </p>
                 <button className="download-btn" disabled>
                   📥 Download Report (Coming Soon)
