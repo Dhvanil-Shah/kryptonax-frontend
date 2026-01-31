@@ -960,6 +960,31 @@ const Candle = (props) => {
   );
 };
 
+// --- CUSTOM TOOLTIP FOR CANDLESTICK CHART ---
+const CustomCandleTooltip = ({ active, payload }) => {
+  if (!active || !payload || !payload[0]) return null;
+  const data = payload[0].payload;
+  const isGreen = data.close >= data.open;
+  const change = data.close - data.open;
+  const changePercent = ((change / data.open) * 100).toFixed(2);
+  
+  return (
+    <div style={{ backgroundColor: "#131722", border: "1px solid #2a2e39", borderRadius: "6px", padding: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+      <div style={{ color: "#d1d4dc", fontWeight: "bold", marginBottom: "8px", fontSize: "12px" }}>{data.date}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "11px" }}>
+        <div><span style={{ color: "#787b86" }}>Open:</span> <span style={{ color: "#d1d4dc", fontWeight: "600" }}>${data.open?.toFixed(2)}</span></div>
+        <div><span style={{ color: "#787b86" }}>High:</span> <span style={{ color: "#00e676", fontWeight: "600" }}>${data.high?.toFixed(2)}</span></div>
+        <div><span style={{ color: "#787b86" }}>Low:</span> <span style={{ color: "#ff1744", fontWeight: "600" }}>${data.low?.toFixed(2)}</span></div>
+        <div><span style={{ color: "#787b86" }}>Close:</span> <span style={{ color: "#d1d4dc", fontWeight: "600" }}>${data.close?.toFixed(2)}</span></div>
+      </div>
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #2a2e39", fontSize: "11px" }}>
+        <div><span style={{ color: "#787b86" }}>Change:</span> <span style={{ color: isGreen ? "#00e676" : "#ff1744", fontWeight: "bold" }}>{isGreen ? "+" : ""}{change.toFixed(2)} ({changePercent}%)</span></div>
+        {data.volume && <div style={{ marginTop: "4px" }}><span style={{ color: "#787b86" }}>Volume:</span> <span style={{ color: "#2962ff", fontWeight: "600" }}>{data.volume?.toLocaleString()}</span></div>}
+      </div>
+    </div>
+  );
+};
+
 // --- HELPER: CREATE REAL CANDLE DATA FROM PRICE HISTORY ---
 const simulateCandles = (data) => {
     if (!data || data.length === 0) return [];
@@ -1281,6 +1306,7 @@ function App() {
   const [notifications, setNotifications] = useState([]); 
     const [moverRegion, setMoverRegion] = useState("all");
     const [newsCategory, setNewsCategory] = useState("all");
+  const [showAdvancedChart, setShowAdvancedChart] = useState(false);
 
   // --- AUTH STATES ---
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -1864,22 +1890,56 @@ const toggleNotification = async (t) => {
                             
                             {/* COLUMN 1: GRAPHS */}
                             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                                <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}> 
-                                        <h4 style={{ margin: 0, color: "#d1d4dc" }}>{searchedTicker} Price Action</h4> 
-                                        <div style={{ display: "flex", gap: "5px" }}> {['1d', '5d', '1mo', '6mo', '1y'].map(r => <button key={r} onClick={() => setChartRange(r)} style={{ padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: "bold", backgroundColor: chartRange === r ? "#2962ff" : "#2a2e39", color: chartRange === r ? "white" : "#787b86" }}>{r.toUpperCase()}</button>)} </div>
+                                <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", position: "relative", cursor: "pointer", transition: "all 0.3s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#2962ff"; e.currentTarget.style.boxShadow = "0 0 20px rgba(41, 98, 255, 0.3)"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2a2e39"; e.currentTarget.style.boxShadow = "none"; }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}> 
+                                        <div>
+                                            <h4 style={{ margin: 0, color: "#d1d4dc", display: "flex", alignItems: "center", gap: "8px" }}>
+                                                📊 {searchedTicker} Price Action
+                                                {currentQuote && (
+                                                    <span style={{ fontSize: "14px", fontWeight: "normal", color: currentQuote.changePercent >= 0 ? "#00e676" : "#ff1744" }}>
+                                                        {currentQuote.changePercent >= 0 ? "▲" : "▼"} {Math.abs(currentQuote.changePercent).toFixed(2)}%
+                                                    </span>
+                                                )}
+                                            </h4>
+                                            <p style={{ fontSize: "10px", color: "#787b86", margin: "4px 0 0 0" }}>Click chart or button for advanced view</p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}> 
+                                            <div style={{ display: "flex", gap: "5px" }}> 
+                                                {['1d', '5d', '1mo', '6mo', '1y'].map(r => <button key={r} onClick={(e) => { e.stopPropagation(); setChartRange(r); }} style={{ padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: "bold", backgroundColor: chartRange === r ? "#2962ff" : "#2a2e39", color: chartRange === r ? "white" : "#787b86", transition: "all 0.2s" }}>{r.toUpperCase()}</button>)} 
+                                            </div>
+                                            <button onClick={(e) => { e.stopPropagation(); setShowAdvancedChart(true); }} style={{ padding: "8px 16px", borderRadius: "4px", border: "1px solid #2962ff", cursor: "pointer", fontSize: "12px", fontWeight: "bold", backgroundColor: "transparent", color: "#2962ff", transition: "all 0.3s", display: "flex", alignItems: "center", gap: "6px" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2962ff"; e.currentTarget.style.color = "white"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#2962ff"; }}>
+                                                📈 Advanced Chart
+                                            </button>
+                                        </div>
                                     </div> 
-                                    <ResponsiveContainer width="100%" height={300}> 
-                                        {/* CANDLESTICK CHART */}
-                                        <ComposedChart data={candleData}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" opacity={0.5} />
-                                            <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} />
-                                            <YAxis domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={{backgroundColor: "#131722", border: "1px solid #2a2e39"}} labelStyle={{color: '#d1d4dc'}} />
-                                            <Bar dataKey="close" shape={<Candle />} />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#787b86', marginTop: '10px' }}>Real-time OHLC data with volume analysis</div>
+                                    <div onClick={() => setShowAdvancedChart(true)}>
+                                        <ResponsiveContainer width="100%" height={300}> 
+                                            <ComposedChart data={candleData}>
+                                                <defs>
+                                                    <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#2962ff" stopOpacity={0.3} />
+                                                        <stop offset="100%" stopColor="#2962ff" stopOpacity={0.05} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2a2e39" opacity={0.5} />
+                                                <XAxis dataKey="date" tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} tickFormatter={(value) => { const date = new Date(value); return `${date.getMonth() + 1}/${date.getDate()}`; }} />
+                                                <YAxis domain={['auto', 'auto']} tick={{fontSize: 11, fill: "#787b86"}} axisLine={false} tickLine={false} tickFormatter={(value) => `$${value.toFixed(0)}`} />
+                                                <Tooltip content={<CustomCandleTooltip />} />
+                                                <Bar dataKey="close" shape={<Candle />} />
+                                                {candleData.length > 0 && <Line type="monotone" dataKey="close" stroke="#2962ff" strokeWidth={1.5} dot={false} strokeOpacity={0.3} />}
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", padding: "8px 12px", backgroundColor: "#131722", borderRadius: "4px" }}>
+                                        <div style={{ fontSize: '11px', color: '#787b86' }}>
+                                            💡 Real-time OHLC data • Volume analysis • Technical indicators
+                                        </div>
+                                        {candleData.length > 0 && (
+                                            <div style={{ fontSize: '11px', color: '#d1d4dc', fontWeight: "bold" }}>
+                                                {candleData.length} candles
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 
                                 {/* PREDICTIVE ANALYSIS GRAPH */}
@@ -2142,6 +2202,37 @@ const toggleNotification = async (t) => {
         apiBaseUrl={API_BASE_URL}
         ticker={searchedTicker}
       />
+
+      {/* --- ADVANCED CHART MODAL --- */}
+      {showAdvancedChart && (
+        <div onClick={() => setShowAdvancedChart(false)} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0, 0, 0, 0.85)", zIndex: 10000, display: "flex", justifyContent: "center", alignItems: "center", padding: "20px", backdropFilter: "blur(5px)" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: "#131722", borderRadius: "8px", width: "100%", maxWidth: "1400px", height: "90vh", maxHeight: "900px", position: "relative", overflow: "hidden", boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", border: "1px solid #2a2e39" }}>
+            {/* Header */}
+            <div style={{ backgroundColor: "#1e222d", padding: "20px", borderBottom: "1px solid #2a2e39", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ margin: 0, color: "#d1d4dc", fontSize: "20px", fontWeight: "600" }}>
+                  \ud83d\udcc8 Advanced Chart - {searchedTicker}
+                </h3>
+                <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#787b86" }}>
+                  Real-time professional charting powered by TradingView
+                </p>
+              </div>
+              <button onClick={() => setShowAdvancedChart(false)} style={{ background: "none", border: "none", color: "#787b86", fontSize: "32px", cursor: "pointer", padding: "0", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "4px", transition: "all 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.color = "#ffffff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#787b86"; }}>
+                \u00d7
+              </button>
+            </div>
+            
+            {/* TradingView Widget Container */}
+            <div style={{ height: "calc(100% - 80px)", width: "100%", position: "relative" }}>
+              <iframe
+                src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${searchedTicker}&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en&utm_source=www.tradingview.com&utm_medium=widget&utm_campaign=chart&utm_term=${searchedTicker}`}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                title="TradingView Advanced Chart"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
