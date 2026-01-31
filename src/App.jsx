@@ -415,6 +415,8 @@ function App() {
   
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showChatBot, setShowChatBot] = useState(false);
+  const [showNewsReader, setShowNewsReader] = useState(false);
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
 
@@ -491,6 +493,24 @@ function App() {
   useEffect(() => { 
             if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
   }, [chartRange]); 
+
+  // Keyboard navigation for news reader
+  useEffect(() => {
+    if (!showNewsReader) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowNewsReader(false);
+      } else if (e.key === 'ArrowLeft' && currentNewsIndex > 0) {
+        setCurrentNewsIndex(currentNewsIndex - 1);
+      } else if (e.key === 'ArrowRight' && currentNewsIndex < filteredGeneralNews.length - 1) {
+        setCurrentNewsIndex(currentNewsIndex + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showNewsReader, currentNewsIndex, filteredGeneralNews.length]); 
 
     // Re-fetch trending when moverRegion changes and poll periodically
     useEffect(() => {
@@ -771,7 +791,19 @@ const toggleNotification = async (t) => {
   // --- DERIVED STATE ---
     const filteredNews = useMemo(() => news.filter(n => n.title?.toLowerCase().includes(newsSearch.toLowerCase())), [news, newsSearch]);
 
-    const classifyArticleCategory = (article) => {
+    const getCategoryBadge = (category) => {
+    const badges = {
+      gold: { icon: '🏆', label: 'Gold', color: '#FFD700', bg: 'rgba(255, 215, 0, 0.15)' },
+      stocks: { icon: '📈', label: 'Stocks', color: '#00e676', bg: 'rgba(0, 230, 118, 0.15)' },
+      mutual_fund: { icon: '💼', label: 'Mutual Funds', color: '#2196F3', bg: 'rgba(33, 150, 243, 0.15)' },
+      crypto: { icon: '₿', label: 'Crypto', color: '#FF9800', bg: 'rgba(255, 152, 0, 0.15)' },
+      real_estate: { icon: '🏘️', label: 'Real Estate', color: '#9C27B0', bg: 'rgba(156, 39, 176, 0.15)' },
+      all: { icon: '📰', label: 'General', color: '#787b86', bg: 'rgba(120, 123, 134, 0.15)' }
+    };
+    return badges[category] || badges.all;
+  };
+
+  const classifyArticleCategory = (article) => {
         const txt = ((article.title || "") + " " + (article.description || "")).toLowerCase();
         if (/gold/.test(txt)) return "gold";
         if (/crypto|bitcoin|ethereum|btc|eth|coin\b/.test(txt)) return "crypto";
@@ -1231,32 +1263,48 @@ const toggleNotification = async (t) => {
                             {filteredGeneralNews.map((article, index) => {
                                 const articleCat = classifyArticleCategory(article);
                                 const entityInfo = inferEntityInfo(article, articleCat);
-                                const displayCatLabel = articleCat === 'all' ? '' : (articleCat === 'mutual_fund' ? 'Mutual Fund' : articleCat === 'real_estate' ? 'Real Estate' : articleCat === 'crypto' ? 'Crypto' : articleCat === 'gold' ? 'Gold' : 'Stocks');
+                                const categoryBadge = getCategoryBadge(articleCat);
                                 return (
                                     <div key={index} className="news-card" style={{ backgroundColor: "#1e222d", borderRadius: "8px", border: "1px solid #2a2e39", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                                         <div>
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                                                <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: getBorderColor(article.sentiment).split(' ')[2] }}>{article.sentiment}</span>
-                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: "12px", color: "#787b86" }}>{new Date(article.publishedAt).toLocaleDateString()}</span>
-                                                    {displayCatLabel && <span style={{ fontSize: '11px', background: '#2a2e39', padding: '4px 8px', borderRadius: '12px', color: '#d1d4dc', border: '1px solid #2a2e39' }}>{displayCatLabel}</span>}
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", padding: "4px 8px", borderRadius: "4px", backgroundColor: getBorderColor(article.sentiment).split(' ')[2] === '#00e676' ? 'rgba(0, 230, 118, 0.2)' : getBorderColor(article.sentiment).split(' ')[2] === '#ff1744' ? 'rgba(255, 23, 68, 0.2)' : 'rgba(255, 215, 0, 0.2)', color: getBorderColor(article.sentiment).split(' ')[2] }}>{article.sentiment}</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '12px', backgroundColor: categoryBadge.bg, color: categoryBadge.color, border: `1px solid ${categoryBadge.color}40`, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <span>{categoryBadge.icon}</span>
+                                                        <span>{categoryBadge.label}</span>
+                                                    </span>
                                                 </div>
-                                                <div style={{position: 'relative'}}>
-                                                    <MoreIcon onClick={() => setActiveMenu(activeMenu === `gen-${index}` ? null : `gen-${index}`)} />
-                                                    {activeMenu === `gen-${index}` && (
-                                                        <div className="menu-dropdown">
-                                                            <div className="menu-item" onClick={() => toggleWatchLater(article)}>
-                                                                {watchLater.some(w => w.title === article.title) ? "Remove Watch Later" : "Watch Later"}
+                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: "11px", color: "#787b86" }}>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                                                    <div style={{position: 'relative'}}>
+                                                        <MoreIcon onClick={() => setActiveMenu(activeMenu === `gen-${index}` ? null : `gen-${index}`)} />
+                                                        {activeMenu === `gen-${index}` && (
+                                                            <div className="menu-dropdown">
+                                                                <div className="menu-item" onClick={() => toggleWatchLater(article)}>
+                                                                    {watchLater.some(w => w.title === article.title) ? "Remove Watch Later" : "Watch Later"}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <h3 style={{ margin: "0 0 10px 0", fontSize: "16px", lineHeight: "1.4" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "#d1d4dc" }}>{article.title}</a></h3>
-                                            <p style={{ fontSize: "13px", color: "#787b86", lineHeight: "1.5" }}>{article.description ? article.description.substring(0, 100) + "..." : "Click to read more."}</p>
-                                            {entityInfo && ( <div style={{ marginTop: '8px', fontSize: '12px', color: '#9fb3ff' }}>{entityInfo}</div> )}
+                                            <h3 style={{ margin: "0 0 10px 0", fontSize: "17px", lineHeight: "1.5", fontWeight: "600" }}>
+                                                <span style={{ color: "#d1d4dc" }}>{article.title}</span>
+                                            </h3>
+                                            <p style={{ fontSize: "13px", color: "#9ca3af", lineHeight: "1.6", marginBottom: "10px" }}>{article.description ? article.description.substring(0, 150) + "..." : "Click to read more."}</p>
+                                            {entityInfo && ( <div style={{ marginTop: '10px', fontSize: '12px', padding: '6px 10px', backgroundColor: 'rgba(41, 98, 255, 0.1)', borderLeft: '3px solid #2962ff', borderRadius: '4px', color: '#9fb3ff' }}>📊 {entityInfo}</div> )}
                                         </div>
-                                        <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #2a2e39" }}><a href={article.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#2962ff", textDecoration: "none", fontWeight: "bold" }}>Read Full Story →</a></div>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #2a2e39" }}>
+                                            <button onClick={() => { setCurrentNewsIndex(index); setShowNewsReader(true); }} style={{ flex: 1, padding: "10px 20px", borderRadius: "6px", border: "none", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", fontSize: "13px", fontWeight: "bold", cursor: "pointer", transition: "all 0.3s", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                                                <span>📖</span>
+                                                <span>Read Now</span>
+                                            </button>
+                                            <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "10px 20px", borderRadius: "6px", border: "1px solid #2962ff", background: "transparent", color: "#2962ff", fontSize: "13px", fontWeight: "bold", textDecoration: "none", textAlign: "center", transition: "all 0.3s", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2962ff'; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#2962ff'; }}>
+                                                <span>🔗</span>
+                                                <span>Full Article</span>
+                                            </a>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -1318,6 +1366,191 @@ const toggleNotification = async (t) => {
         apiBaseUrl={API_BASE_URL}
         ticker={searchedTicker}
       />
+
+      {/* --- NEWS READER MODAL --- */}
+      {showNewsReader && filteredGeneralNews[currentNewsIndex] && (
+        <div onClick={() => setShowNewsReader(false)} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0, 0, 0, 0.9)", zIndex: 10001, display: "flex", justifyContent: "center", alignItems: "center", padding: "20px", backdropFilter: "blur(5px)" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: "#1e222d", borderRadius: "16px", width: "100%", maxWidth: "800px", maxHeight: "90vh", position: "relative", overflow: "hidden", boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", border: "1px solid #2a2e39" }}>
+            {/* Header */}
+            <div style={{ backgroundColor: "#131722", padding: "20px 30px", borderBottom: "1px solid #2a2e39", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                <div style={{ fontSize: "28px" }}>📰</div>
+                <div>
+                  <h3 style={{ margin: 0, color: "#d1d4dc", fontSize: "18px", fontWeight: "600" }}>
+                    News Reader
+                  </h3>
+                  <p style={{ margin: "3px 0 0 0", fontSize: "12px", color: "#787b86" }}>
+                    Article {currentNewsIndex + 1} of {filteredGeneralNews.length}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowNewsReader(false)} style={{ background: "none", border: "none", color: "#787b86", fontSize: "32px", cursor: "pointer", padding: "0", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "4px", transition: "all 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.color = "#ffffff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#787b86"; }}>
+                ×
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div style={{ padding: "30px", maxHeight: "calc(90vh - 200px)", overflowY: "auto" }}>
+              {(() => {
+                const article = filteredGeneralNews[currentNewsIndex];
+                const articleCat = classifyArticleCategory(article);
+                const categoryBadge = getCategoryBadge(articleCat);
+                const entityInfo = inferEntityInfo(article, articleCat);
+                
+                return (
+                  <>
+                    {/* Category and Sentiment Badges */}
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', padding: '6px 14px', borderRadius: '20px', backgroundColor: categoryBadge.bg, color: categoryBadge.color, border: `1px solid ${categoryBadge.color}40`, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{categoryBadge.icon}</span>
+                        <span>{categoryBadge.label}</span>
+                      </span>
+                      <span style={{ fontSize: "12px", fontWeight: "600", padding: "6px 14px", borderRadius: "20px", backgroundColor: getBorderColor(article.sentiment).split(' ')[2] === '#00e676' ? 'rgba(0, 230, 118, 0.2)' : getBorderColor(article.sentiment).split(' ')[2] === '#ff1744' ? 'rgba(255, 23, 68, 0.2)' : 'rgba(255, 215, 0, 0.2)', color: getBorderColor(article.sentiment).split(' ')[2] }}>
+                        {article.sentiment === 'positive' ? '📈' : article.sentiment === 'negative' ? '📉' : '➖'} {article.sentiment}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "#787b86", padding: "6px 14px", backgroundColor: "#2a2e39", borderRadius: "20px" }}>
+                        🗓️ {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h2 style={{ color: "#ffffff", fontSize: "24px", lineHeight: "1.4", margin: "0 0 20px 0", fontWeight: "700" }}>
+                      {article.title}
+                    </h2>
+
+                    {/* Entity Info */}
+                    {entityInfo && (
+                      <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: 'rgba(41, 98, 255, 0.1)', borderLeft: '4px solid #2962ff', borderRadius: '6px' }}>
+                        <div style={{ fontSize: '13px', color: '#9fb3ff', fontWeight: '500' }}>
+                          📊 {entityInfo}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Image */}
+                    {article.urlToImage && (
+                      <div style={{ marginBottom: '25px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #2a2e39' }}>
+                        <img 
+                          src={article.urlToImage} 
+                          alt={article.title}
+                          style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div style={{ fontSize: '16px', color: '#d1d4dc', lineHeight: '1.8', marginBottom: '25px' }}>
+                      {article.description || article.content || 'No additional details available. Click "Read Full Article" below to view the complete story on the publisher\'s website.'}
+                    </div>
+
+                    {/* Source */}
+                    {article.source?.name && (
+                      <div style={{ padding: '15px', backgroundColor: '#131722', borderRadius: '8px', marginBottom: '20px', border: '1px solid #2a2e39' }}>
+                        <div style={{ fontSize: '12px', color: '#787b86', marginBottom: '4px' }}>Source</div>
+                        <div style={{ fontSize: '14px', color: '#d1d4dc', fontWeight: '600' }}>
+                          📰 {article.source.name}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Read More Button */}
+                    <a 
+                      href={article.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: '10px',
+                        padding: '16px 24px', 
+                        borderRadius: '10px', 
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white', 
+                        fontSize: '15px', 
+                        fontWeight: 'bold',
+                        textDecoration: 'none',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => { 
+                        e.currentTarget.style.transform = 'translateY(-2px)'; 
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                      }}
+                      onMouseLeave={(e) => { 
+                        e.currentTarget.style.transform = 'translateY(0)'; 
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                      }}
+                    >
+                      <span>🔗</span>
+                      <span>Read Full Article on {article.source?.name || 'Publisher\'s Website'}</span>
+                      <span>→</span>
+                    </a>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Navigation Footer */}
+            <div style={{ backgroundColor: "#131722", padding: "20px 30px", borderTop: "1px solid #2a2e39", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button 
+                onClick={() => setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1))}
+                disabled={currentNewsIndex === 0}
+                style={{ 
+                  padding: "12px 24px", 
+                  borderRadius: "8px", 
+                  border: "1px solid #2962ff", 
+                  background: currentNewsIndex === 0 ? "#2a2e39" : "transparent",
+                  color: currentNewsIndex === 0 ? "#787b86" : "#2962ff",
+                  fontSize: "14px", 
+                  fontWeight: "600",
+                  cursor: currentNewsIndex === 0 ? "not-allowed" : "pointer",
+                  transition: "all 0.3s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+                onMouseEnter={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.backgroundColor = '#2962ff'; e.currentTarget.style.color = 'white'; } }}
+                onMouseLeave={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#2962ff'; } }}
+              >
+                <span>←</span>
+                <span>Previous</span>
+              </button>
+
+              <div style={{ fontSize: "13px", color: "#787b86", fontWeight: "500" }}>
+                Swipe or use arrow keys to navigate
+              </div>
+
+              <button 
+                onClick={() => setCurrentNewsIndex(Math.min(filteredGeneralNews.length - 1, currentNewsIndex + 1))}
+                disabled={currentNewsIndex === filteredGeneralNews.length - 1}
+                style={{ 
+                  padding: "12px 24px", 
+                  borderRadius: "8px", 
+                  border: "1px solid #2962ff", 
+                  background: currentNewsIndex === filteredGeneralNews.length - 1 ? "#2a2e39" : "transparent",
+                  color: currentNewsIndex === filteredGeneralNews.length - 1 ? "#787b86" : "#2962ff",
+                  fontSize: "14px", 
+                  fontWeight: "600",
+                  cursor: currentNewsIndex === filteredGeneralNews.length - 1 ? "not-allowed" : "pointer",
+                  transition: "all 0.3s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+                onMouseEnter={(e) => { if (currentNewsIndex !== filteredGeneralNews.length - 1) { e.currentTarget.style.backgroundColor = '#2962ff'; e.currentTarget.style.color = 'white'; } }}
+                onMouseLeave={(e) => { if (currentNewsIndex !== filteredGeneralNews.length - 1) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#2962ff'; } }}
+              >
+                <span>Next</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- ADVANCED CHART MODAL --- */}
       {showAdvancedChart && (
