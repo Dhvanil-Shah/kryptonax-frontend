@@ -2,14 +2,71 @@
 
 * {
   box-sizing: border-box;
-}
-
-body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
   background-color: #131722;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll */
+body, html, #root, .app-container {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Responsive images and media */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive tables */
+table {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Base typography responsive */
+h1 { font-size: clamp(1.5rem, 5vw, 3rem); }
+h2 { font-size: clamp(1.25rem, 4vw, 2.5rem); }
+h3 { font-size: clamp(1.1rem, 3vw, 2rem); }
+h4 { font-size: clamp(1rem, 2.5vw, 1.5rem); }
+p { font-size: clamp(0.875rem, 2vw, 1rem); }
+
+/* Container widths */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
 }
 
 /* Navigation Responsive */
@@ -209,8 +266,10 @@ nav > div:last-child {
   .search-input {
     font-size: 14px !important;
     padding: 10px 40px 10px 10px !important;
+    width: 100% !important;
   }
 
+  /* Grid and layout */
   .content-grid {
     grid-template-columns: 1fr !important;
     gap: 15px !important;
@@ -222,25 +281,40 @@ nav > div:last-child {
     gap: 15px !important;
   }
 
-  /* Cards */
-  .card-container {
-    padding: 15px !important;
+  /* Cards and panels */
+  .card-container,
+  .panel,
+  .widget {
+    padding: 12px !important;
+    margin: 10px 0 !important;
   }
 
   .card-container h3,
   .card-container h4 {
-    font-size: 16px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Charts */
+  .recharts-wrapper {
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .recharts-surface {
+    max-width: 100% !important;
   }
 
   /* Trending & Favorites sections */
   .trending-container,
   .favorites-container {
     padding: 15px 10px !important;
+    overflow-x: auto !important;
   }
 
   .ticker-chip {
     font-size: 12px !important;
     padding: 6px 10px !important;
+    white-space: nowrap !important;
   }
 
   /* Quote display */
@@ -268,6 +342,7 @@ nav > div:last-child {
   .chart-controls button {
     font-size: 11px !important;
     padding: 6px 10px !important;
+    white-space: nowrap !important;
   }
 
   /* Modal */
@@ -393,6 +468,112 @@ nav > div:last-child {
   }
 }
 
+/* Extra Small Mobile (max-width: 360px) */
+@media (max-width: 360px) {
+  .nav-brand {
+    font-size: 14px !important;
+    padding: 8px !important;
+  }
+
+  .nav-menu span {
+    padding: 5px 6px !important;
+    font-size: 10px !important;
+  }
+
+  .search-input {
+    font-size: 12px !important;
+    padding: 8px 35px 8px 8px !important;
+  }
+
+  .card-container {
+    padding: 10px !important;
+    margin: 8px 0 !important;
+  }
+
+  .card-container h3 {
+    font-size: 13px !important;
+  }
+
+  .quote-price {
+    font-size: 24px !important;
+  }
+
+  .modal-container {
+    max-width: 95% !important;
+    padding: 15px !important;
+  }
+
+  .ticker-chip {
+    font-size: 10px !important;
+    padding: 4px 6px !important;
+  }
+
+  button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Modal Responsive Styles */
+.modal-overlay {
+  padding: 10px !important;
+}
+
+.modal-container {
+  max-width: 90% !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: 0 auto !important;
+}
+
+.modal-content {
+  padding: 20px !important;
+}
+
+.modal-header {
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.modal-close-btn {
+  min-width: 30px !important;
+  min-height: 30px !important;
+  font-size: 20px !important;
+}
+
+/* Table Responsive Utilities */
+.table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin: 10px 0 !important;
+}
+
+table {
+  min-width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+table td,
+table th {
+  padding: 8px 12px !important;
+  white-space: nowrap !important;
+}
+
+/* Form Responsive Styles */
+input,
+textarea,
+select {
+  font-size: 16px !important; /* Prevents zoom on iOS */
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+button {
+  min-height: 44px !important; /* Touch-friendly */
+  touch-action: manipulation !important;
+  cursor: pointer !important;
+}
+
 /* Utility Classes */
 .mobile-only {
   display: none !important;
@@ -470,6 +651,35 @@ nav > div:last-child {
 
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background: #2962ff;
+}
+
+/* Landscape Orientation (Phones in landscape) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-container {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+
+  .nav-container {
+    padding: 5px 10px !important;
+  }
+
+  .search-container {
+    padding: 10px !important;
+  }
+
+  .card-container {
+    padding: 10px !important;
+  }
+
+  /* Reduce vertical spacing in landscape */
+  h1, h2, h3, h4 {
+    margin: 8px 0 !important;
+  }
+
+  .content-section {
+    padding: 10px 0 !important;
+  }
 }
 
 /* Animations */

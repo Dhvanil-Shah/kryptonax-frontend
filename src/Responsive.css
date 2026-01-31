@@ -1,0 +1,539 @@
+/* ================================
+   ADDITIONAL RESPONSIVE STYLES
+   For elements with inline styles in App.jsx
+   ================================ */
+
+/* Auth Modal Responsive */
+.auth-modal {
+  max-width: 400px !important;
+  width: 90% !important;
+  padding: 30px !important;
+  box-sizing: border-box !important;
+}
+
+.auth-modal h2 {
+  margin-bottom: 20px !important;
+}
+
+.auth-modal input,
+.auth-modal button {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+  .auth-modal {
+    max-width: 95% !important;
+    padding: 20px !important;
+  }
+
+  .auth-modal h2 {
+    font-size: 20px !important;
+  }
+
+  .auth-modal input {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+
+  .auth-modal button {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* About Page Responsive */
+.about-section {
+  padding: 40px 20px !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+.about-section h1,
+.about-section h2,
+.about-section h3 {
+  margin: 20px 0 15px !important;
+}
+
+.about-section p {
+  line-height: 1.6 !important;
+  margin-bottom: 15px !important;
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    padding: 30px 15px !important;
+  }
+
+  .about-section h1 {
+    font-size: 28px !important;
+  }
+
+  .about-section h2 {
+    font-size: 22px !important;
+  }
+
+  .about-section p {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-section {
+    padding: 20px 10px !important;
+  }
+
+  .about-section h1 {
+    font-size: 24px !important;
+  }
+
+  .about-section h2 {
+    font-size: 18px !important;
+  }
+
+  .about-section p {
+    font-size: 13px !important;
+  }
+}
+
+/* News Cards Responsive */
+.news-card {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.news-card img {
+  width: 100% !important;
+  height: 200px !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+
+.news-card h3 {
+  font-size: 16px !important;
+  margin: 10px 0 !important;
+  line-height: 1.4 !important;
+}
+
+.news-card p {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+@media (max-width: 768px) {
+  .news-card img {
+    height: 150px !important;
+  }
+
+  .news-card h3 {
+    font-size: 15px !important;
+  }
+
+  .news-card p {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-card img {
+    height: 120px !important;
+  }
+
+  .news-card h3 {
+    font-size: 14px !important;
+  }
+
+  .news-card p {
+    font-size: 12px !important;
+  }
+}
+
+/* Sentiment Gauge Responsive */
+.gauge-container {
+  height: 250px !important;
+  min-height: 200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.gauge-container svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+@media (max-width: 768px) {
+  .gauge-container {
+    height: 220px !important;
+    min-height: 180px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .gauge-container {
+    height: 200px !important;
+    min-height: 160px !important;
+  }
+
+  .gauge-container h4 {
+    font-size: 16px !important;
+  }
+
+  .gauge-container p {
+    font-size: 10px !important;
+  }
+}
+
+/* Trending Stocks Responsive */
+.trending-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 15px !important;
+}
+
+@media (max-width: 768px) {
+  .trending-container {
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .trending-container {
+    gap: 6px !important;
+    padding: 10px !important;
+  }
+}
+
+/* Favorites Container Responsive */
+.favorites-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 15px !important;
+}
+
+@media (max-width: 768px) {
+  .favorites-container {
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .favorites-container {
+    gap: 6px !important;
+    padding: 10px !important;
+  }
+}
+
+/* Quote Display Responsive */
+.quote-display {
+  text-align: center !important;
+  padding: 20px !important;
+}
+
+.quote-display h2 {
+  font-size: clamp(28px, 5vw, 48px) !important;
+  margin: 10px 0 !important;
+}
+
+.quote-display .change-indicator {
+  font-size: clamp(14px, 3vw, 18px) !important;
+}
+
+@media (max-width: 480px) {
+  .quote-display {
+    padding: 15px 10px !important;
+  }
+}
+
+/* Chart Controls Responsive */
+.chart-controls-container {
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 15px 0 !important;
+}
+
+.chart-control-btn {
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+  min-width: 60px !important;
+}
+
+@media (max-width: 768px) {
+  .chart-controls-container {
+    gap: 6px !important;
+  }
+
+  .chart-control-btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    min-width: 50px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-controls-container {
+    gap: 5px !important;
+    margin: 10px 0 !important;
+  }
+
+  .chart-control-btn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-width: 45px !important;
+  }
+}
+
+/* Grid Layouts Responsive */
+.two-column-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 20px !important;
+}
+
+.three-column-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 20px !important;
+}
+
+@media (max-width: 1024px) {
+  .three-column-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .two-column-grid,
+  .three-column-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+}
+
+/* Panel/Widget Responsive */
+.panel,
+.widget,
+.info-box {
+  padding: 20px !important;
+  border-radius: 4px !important;
+  background-color: #1e222d !important;
+  border: 1px solid #2a2e39 !important;
+}
+
+@media (max-width: 768px) {
+  .panel,
+  .widget,
+  .info-box {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel,
+  .widget,
+  .info-box {
+    padding: 12px !important;
+  }
+}
+
+/* Ticker Chips Responsive */
+.ticker-chip {
+  display: inline-block !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: bold !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+
+@media (max-width: 768px) {
+  .ticker-chip {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticker-chip {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Button Groups Responsive */
+.button-group {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    gap: 8px !important;
+  }
+
+  .button-group button {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Loading States Responsive */
+.loading-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 40px !important;
+}
+
+@media (max-width: 480px) {
+  .loading-container {
+    padding: 30px 20px !important;
+  }
+}
+
+/* Error Messages Responsive */
+.error-message {
+  padding: 15px !important;
+  text-align: center !important;
+  color: #ff1744 !important;
+  font-size: 14px !important;
+}
+
+@media (max-width: 480px) {
+  .error-message {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Success Messages Responsive */
+.success-message {
+  padding: 15px !important;
+  text-align: center !important;
+  color: #00e676 !important;
+  font-size: 14px !important;
+}
+
+@media (max-width: 480px) {
+  .success-message {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Tabs Responsive */
+.tabs-container {
+  display: flex !important;
+  gap: 10px !important;
+  border-bottom: 2px solid #2a2e39 !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.tab-item {
+  padding: 12px 20px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+@media (max-width: 768px) {
+  .tab-item {
+    padding: 10px 15px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-item {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Chart Container Responsive */
+.recharts-responsive-container {
+  min-height: 300px !important;
+}
+
+@media (max-width: 768px) {
+  .recharts-responsive-container {
+    min-height: 250px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .recharts-responsive-container {
+    min-height: 200px !important;
+  }
+}
+
+/* Tooltip Responsive */
+.custom-tooltip {
+  background-color: rgba(30, 34, 45, 0.95) !important;
+  padding: 10px !important;
+  border: 1px solid #2a2e39 !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+}
+
+@media (max-width: 480px) {
+  .custom-tooltip {
+    padding: 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Back Button Responsive */
+.back-button {
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 768px) {
+  .back-button {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button {
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Notification Badge Responsive */
+.notification-badge {
+  position: absolute !important;
+  top: -5px !important;
+  right: -5px !important;
+  background-color: #ff1744 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+}
+
+@media (max-width: 480px) {
+  .notification-badge {
+    font-size: 10px !important;
+    padding: 2px 5px !important;
+  }
+}
