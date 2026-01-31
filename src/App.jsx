@@ -1348,6 +1348,28 @@ const toggleNotification = async (t) => {
                         </button>
                       </div>
                     </div>
+
+                    {/* Keyboard Shortcuts Info */}
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1e222d', borderRadius: '8px', border: '1px solid #2a2e39', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: '#787b86', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Keyboard Shortcuts</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '12px', color: '#9fb3ff', flexWrap: 'wrap' }}>
+                        <span>← / → Navigate</span>
+                        <span>🏠 Home</span>
+                        <span>1-9 Jump to page</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      ) : (
+        <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
+            
+            {/* SIDEBAR - NOW WITH WATCH LATER */}
+            {!searchedTicker && (
+                <aside style={{ width: "300px", backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height: "fit-content" }}>
                     <h3 style={{ borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>⭐ My Watchlist</h3>
                     {!token && <p style={{fontSize: "12px", color: "#787b86"}}>Login to save your favorites.</p>}
                     <div style={{ display: "flex", gap: "5px", marginBottom: "20px", position: "relative" }}> <input type="text" placeholder="Add Ticker..." value={newFav} onChange={(e) => { setNewFav(e.target.value.toUpperCase()); setShowFavSuggestions(true); fetchSuggestions(e.target.value, true); }} style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white" }} /> <button onClick={() => toggleFavorite(newFav)} style={{ background: "#2962ff", color: "white", border: "none", borderRadius: "4px", padding: "0 15px", cursor: "pointer" }}>+</button> {showFavSuggestions && favSuggestions.length > 0 && ( <div style={{ position: "absolute", top: "40px", left: 0, width: "100%", backgroundColor: "#1e222d", zIndex: 10, border: "1px solid #2a2e39", boxShadow: "0 4px 10px rgba(0,0,0,0.5)" }}> {favSuggestions.map(s => <div key={s.symbol} onClick={() => toggleFavorite(s.symbol)} style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid #2a2e39", fontSize: "13px" }}><span style={{fontWeight: "bold", color: "#2962ff"}}>{s.symbol}</span> <span style={{color: "#787b86"}}>({s.name})</span></div>)} </div> )} </div>
