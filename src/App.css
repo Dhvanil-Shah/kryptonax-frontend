@@ -255,18 +255,17 @@ nav > div:last-child {
   }
 
   .search-container {
-    padding: 15px 10px !important;
+    padding: 15px 10px;
   }
 
   .search-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 100%;
+    max-width: 100%;
   }
 
   .search-input {
-    font-size: 14px !important;
-    padding: 10px 40px 10px 10px !important;
-    width: 100% !important;
+    font-size: 14px;
+    padding: 10px 40px 10px 10px;
   }
 
   /* Grid and layout */
@@ -346,8 +345,16 @@ nav > div:last-child {
   }
 
   /* Modal */
+  .modal-overlay {
+    align-items: flex-start !important;
+    padding-top: 20px !important;
+    overflow-y: auto !important;
+  }
+
   .modal-container {
     width: 95% !important;
+    max-height: 80vh !important;
+    margin: 0 auto !important;
     max-width: 95% !important;
     padding: 25px !important;
     margin: 10px !important;

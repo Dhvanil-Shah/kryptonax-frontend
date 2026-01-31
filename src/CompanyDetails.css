@@ -986,12 +986,19 @@
     touch-action: manipulation;
   }
 
-  /* Modal */
+  /* Modal - Fix positioning on mobile */
+  .report-modal-overlay {
+    align-items: flex-start;
+    padding-top: 60px;
+    overflow-y: auto;
+  }
+
   .report-modal {
     padding: 1.2rem;
     max-width: 95vw;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
+    margin-bottom: 20px;
   }
 
   .modal-close {

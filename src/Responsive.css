@@ -96,35 +96,11 @@
   }
 }
 
-/* News Cards Responsive */
-.news-card {
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-  overflow: hidden !important;
-}
-
-.news-card img {
-  width: 100% !important;
-  height: 200px !important;
-  object-fit: cover !important;
-  flex-shrink: 0 !important;
-}
-
-.news-card h3 {
-  font-size: 16px !important;
-  margin: 10px 0 !important;
-  line-height: 1.4 !important;
-}
-
-.news-card p {
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-}
-
+/* News Cards Responsive - Only apply constraints on mobile */
 @media (max-width: 768px) {
   .news-card img {
     height: 150px !important;
+    object-fit: cover !important;
   }
 
   .news-card h3 {
@@ -150,18 +126,11 @@
   }
 }
 
-/* Sentiment Gauge Responsive */
-.gauge-container {
-  height: 250px !important;
-  min-height: 200px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-}
-
-.gauge-container svg {
-  max-width: 100% !important;
-  height: auto !important;
+/* Sentiment Gauge Responsive - Only constrain on mobile */
+@media (min-width: 769px) {
+  .gauge-container svg {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -186,14 +155,7 @@
   }
 }
 
-/* Trending Stocks Responsive */
-.trending-container {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 10px !important;
-  padding: 15px !important;
-}
-
+/* Trending Stocks Responsive - Only apply on mobile */
 @media (max-width: 768px) {
   .trending-container {
     justify-content: center !important;
@@ -208,14 +170,7 @@
   }
 }
 
-/* Favorites Container Responsive */
-.favorites-container {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 10px !important;
-  padding: 15px !important;
-}
-
+/* Favorites Container Responsive - Only apply on mobile */
 @media (max-width: 768px) {
   .favorites-container {
     justify-content: center !important;
@@ -230,21 +185,7 @@
   }
 }
 
-/* Quote Display Responsive */
-.quote-display {
-  text-align: center !important;
-  padding: 20px !important;
-}
-
-.quote-display h2 {
-  font-size: clamp(28px, 5vw, 48px) !important;
-  margin: 10px 0 !important;
-}
-
-.quote-display .change-indicator {
-  font-size: clamp(14px, 3vw, 18px) !important;
-}
-
+/* Quote Display Responsive - Only apply spacing on mobile */
 @media (max-width: 480px) {
   .quote-display {
     padding: 15px 10px !important;
