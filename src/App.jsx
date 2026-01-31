@@ -1009,7 +1009,10 @@ const generateUniquePrediction = (historyData, ticker) => {
 // --- FLUID GAUGE ---
 const SentimentGauge = ({ data, newsCounts }) => {
   const getFluidSentiment = () => {
-    if (!data || data.length < 14) return { rotation: 0, text: "Analyzing...", color: "#FFD700" };
+    if (!data || data.length < 14) return { 
+      rotation: 0, text: "Analyzing...", color: "#FFD700", 
+      breakdown: null 
+    };
     
     const prices = data.map(d => d.price);
     const volumes = data.map(d => d.volume || 0);
@@ -1053,37 +1056,59 @@ const SentimentGauge = ({ data, newsCounts }) => {
     const neg = newsCounts.find(n => n.name === 'Negative')?.value || 0;
     const totalNews = pos + neg;
     const newsRatio = totalNews > 0 ? (pos - neg) / totalNews : 0;
-    const newsScore = newsRatio * 25; // Increased from 3 to 25 for stronger impact
+    const newsScore = newsRatio * 25;
     
-    // Calculate technical score
+    // Calculate technical score with breakdown
     const rsi = calculateRSI();
     let score = 0;
+    let breakdown = {
+      rsi: { value: rsi.toFixed(1), score: 0, signal: "" },
+      ma: { sma20: sma20.toFixed(2), sma50: sma50.toFixed(2), score: 0, signal: "" },
+      macd: { value: macd.toFixed(2), score: 0, signal: "" },
+      momentum: { value: momentum.toFixed(2), score: 0, signal: "" },
+      volume: { trend: volumeTrend > 0 ? "High" : "Low", score: 0, signal: "" },
+      news: { pos, neg, score: 0, signal: "" }
+    };
     
-    // RSI signals (30-70 range) - reduced weight
-    if (rsi > 70) score -= 15;
-    else if (rsi > 60) score += 3;
-    else if (rsi < 30) score += 15;
-    else if (rsi < 40) score -= 3;
-    else score += 5;
+    // RSI signals
+    if (rsi > 70) { breakdown.rsi.score = -15; breakdown.rsi.signal = "Overbought"; score -= 15; }
+    else if (rsi > 60) { breakdown.rsi.score = 3; breakdown.rsi.signal = "Slightly High"; score += 3; }
+    else if (rsi < 30) { breakdown.rsi.score = 15; breakdown.rsi.signal = "Oversold"; score += 15; }
+    else if (rsi < 40) { breakdown.rsi.score = -3; breakdown.rsi.signal = "Slightly Low"; score -= 3; }
+    else { breakdown.rsi.score = 5; breakdown.rsi.signal = "Neutral"; score += 5; }
     
-    // Moving average signals - reduced weight
-    if (current > sma20) score += 10;
-    if (current > sma50) score += 8;
-    if (sma20 > sma50) score += 7;
-    if (current < sma20) score -= 10;
-    if (current < sma50) score -= 8;
+    // Moving average signals
+    let maScore = 0;
+    if (current > sma20) maScore += 10;
+    if (current > sma50) maScore += 8;
+    if (sma20 > sma50) maScore += 7;
+    if (current < sma20) maScore -= 10;
+    if (current < sma50) maScore -= 8;
+    breakdown.ma.score = maScore;
+    breakdown.ma.signal = maScore > 10 ? "Bullish" : maScore < -10 ? "Bearish" : "Neutral";
+    score += maScore;
     
-    // MACD signal - reduced weight
-    if (macd > 0) score += 8;
-    else score -= 8;
+    // MACD signal
+    const macdScore = macd > 0 ? 8 : -8;
+    breakdown.macd.score = macdScore;
+    breakdown.macd.signal = macd > 0 ? "Bullish" : "Bearish";
+    score += macdScore;
     
-    // Momentum - reduced weight
-    score += momentum * 1.5;
+    // Momentum
+    const momentumScore = momentum * 1.5;
+    breakdown.momentum.score = momentumScore.toFixed(1);
+    breakdown.momentum.signal = momentum > 2 ? "Strong Up" : momentum > 0 ? "Up" : momentum < -2 ? "Strong Down" : "Down";
+    score += momentumScore;
     
-    // Volume - reduced weight
-    score += volumeTrend * 3;
+    // Volume
+    const volumeScore = volumeTrend * 3;
+    breakdown.volume.score = volumeScore;
+    breakdown.volume.signal = volumeTrend > 0 ? "Increasing" : "Decreasing";
+    score += volumeScore;
     
-    // News sentiment - now has much more impact
+    // News sentiment
+    breakdown.news.score = newsScore.toFixed(1);
+    breakdown.news.signal = newsScore > 10 ? "Very Positive" : newsScore > 0 ? "Positive" : newsScore < -10 ? "Very Negative" : "Negative";
     score += newsScore;
     
     // Convert to rotation (-90 to 90)
@@ -1095,27 +1120,69 @@ const SentimentGauge = ({ data, newsCounts }) => {
     else if (rotation < -50) { text = "Strong Sell"; color = "#ff1744"; }
     else if (rotation < -15) { text = "Sell"; color = "#ff5252"; }
     
-    return { rotation, text, color };
+    breakdown.total = score.toFixed(1);
+    
+    return { rotation, text, color, breakdown };
   };
-  const { rotation, text, color } = getFluidSentiment();
+  
+  const { rotation, text, color, breakdown } = getFluidSentiment();
+  
   return (
-    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", textAlign: "center", position: 'relative', height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <h4 style={{ color: "#d1d4dc", marginBottom: "0px" }}>Technical Analysis</h4>
-      <p style={{ fontSize: "11px", color: "#787b86" }}>Fluid AI Calculation</p>
-      <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
-        <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="url(#gradSell)" strokeWidth="15" strokeLinecap="round" />
-        <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradBuy)" strokeWidth="15" strokeLinecap="round" />
-        <defs>
-            <linearGradient id="gradSell" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#ff1744" /> <stop offset="100%" stopColor="#FFD700" /> </linearGradient>
-            <linearGradient id="gradBuy" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#FFD700" /> <stop offset="100%" stopColor="#00e676" /> </linearGradient>
-        </defs>
-        <g transform={`rotate(${rotation}, 100, 100)`} style={{ transition: 'transform 0.5s ease-out' }}>
-          <path d="M 100 100 L 100 25" stroke="white" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="8" fill="#1e222d" stroke="white" strokeWidth="2" />
-        </g>
-        <text x="100" y="80" textAnchor="middle" fill={color} fontSize="22" fontWeight="bold" style={{textShadow: `0 0 15px ${color}`}}>{text}</text>
-      </svg>
+    <div style={{ backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39" }}>
+      <div style={{ textAlign: "center", position: 'relative', height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <h4 style={{ color: "#d1d4dc", marginBottom: "0px" }}>Technical Analysis</h4>
+        <p style={{ fontSize: "11px", color: "#787b86" }}>Fluid AI Calculation</p>
+        <svg viewBox="0 0 200 120" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2e39" strokeWidth="15" strokeLinecap="round" />
+          <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="url(#gradSell)" strokeWidth="15" strokeLinecap="round" />
+          <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradBuy)" strokeWidth="15" strokeLinecap="round" />
+          <defs>
+              <linearGradient id="gradSell" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#ff1744" /> <stop offset="100%" stopColor="#FFD700" /> </linearGradient>
+              <linearGradient id="gradBuy" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" stopColor="#FFD700" /> <stop offset="100%" stopColor="#00e676" /> </linearGradient>
+          </defs>
+          <g transform={`rotate(${rotation}, 100, 100)`} style={{ transition: 'transform 0.5s ease-out' }}>
+            <path d="M 100 100 L 100 25" stroke="white" strokeWidth="4" strokeLinecap="round" />
+            <circle cx="100" cy="100" r="8" fill="#1e222d" stroke="white" strokeWidth="2" />
+          </g>
+          <text x="100" y="80" textAnchor="middle" fill={color} fontSize="22" fontWeight="bold" style={{textShadow: `0 0 15px ${color}`}}>{text}</text>
+        </svg>
+      </div>
+      
+      {breakdown && (
+        <div style={{ marginTop: "20px", borderTop: "1px solid #2a2e39", paddingTop: "15px" }}>
+          <h5 style={{ color: "#d1d4dc", fontSize: "14px", marginBottom: "12px", fontWeight: "600" }}>📊 Analysis Breakdown</h5>
+          <div style={{ display: "grid", gap: "8px", fontSize: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${breakdown.rsi.score > 0 ? '#00e676' : breakdown.rsi.score < 0 ? '#ff1744' : '#FFD700'}` }}>
+              <span style={{ color: "#787b86" }}>RSI (14): <span style={{ color: "#d1d4dc", fontWeight: "500" }}>{breakdown.rsi.value}</span></span>
+              <span style={{ color: breakdown.rsi.score > 0 ? '#00e676' : breakdown.rsi.score < 0 ? '#ff1744' : '#FFD700', fontWeight: "600" }}>{breakdown.rsi.signal} ({breakdown.rsi.score > 0 ? '+' : ''}{breakdown.rsi.score})</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${breakdown.ma.score > 0 ? '#00e676' : breakdown.ma.score < 0 ? '#ff1744' : '#FFD700'}` }}>
+              <span style={{ color: "#787b86" }}>Moving Avg: <span style={{ color: "#d1d4dc", fontWeight: "500" }}>SMA20: {breakdown.ma.sma20}</span></span>
+              <span style={{ color: breakdown.ma.score > 0 ? '#00e676' : breakdown.ma.score < 0 ? '#ff1744' : '#FFD700', fontWeight: "600" }}>{breakdown.ma.signal} ({breakdown.ma.score > 0 ? '+' : ''}{breakdown.ma.score})</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${breakdown.macd.score > 0 ? '#00e676' : '#ff1744'}` }}>
+              <span style={{ color: "#787b86" }}>MACD: <span style={{ color: "#d1d4dc", fontWeight: "500" }}>{breakdown.macd.value}</span></span>
+              <span style={{ color: breakdown.macd.score > 0 ? '#00e676' : '#ff1744', fontWeight: "600" }}>{breakdown.macd.signal} ({breakdown.macd.score > 0 ? '+' : ''}{breakdown.macd.score})</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${parseFloat(breakdown.momentum.score) > 0 ? '#00e676' : '#ff1744'}` }}>
+              <span style={{ color: "#787b86" }}>Momentum: <span style={{ color: "#d1d4dc", fontWeight: "500" }}>{breakdown.momentum.value}%</span></span>
+              <span style={{ color: parseFloat(breakdown.momentum.score) > 0 ? '#00e676' : '#ff1744', fontWeight: "600" }}>{breakdown.momentum.signal} ({parseFloat(breakdown.momentum.score) > 0 ? '+' : ''}{breakdown.momentum.score})</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${breakdown.volume.score > 0 ? '#00e676' : '#ff1744'}` }}>
+              <span style={{ color: "#787b86" }}>Volume: <span style={{ color: "#d1d4dc", fontWeight: "500" }}>{breakdown.volume.trend}</span></span>
+              <span style={{ color: breakdown.volume.score > 0 ? '#00e676' : '#ff1744', fontWeight: "600" }}>{breakdown.volume.signal} ({breakdown.volume.score > 0 ? '+' : ''}{breakdown.volume.score})</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", backgroundColor: "#131722", borderRadius: "4px", borderLeft: `3px solid ${parseFloat(breakdown.news.score) > 0 ? '#00e676' : parseFloat(breakdown.news.score) < 0 ? '#ff1744' : '#FFD700'}` }}>
+              <span style={{ color: "#787b86" }}>News: <span style={{ color: "#00e676", fontWeight: "500" }}>{breakdown.news.pos}↑</span> <span style={{ color: "#ff1744", fontWeight: "500" }}>{breakdown.news.neg}↓</span></span>
+              <span style={{ color: parseFloat(breakdown.news.score) > 0 ? '#00e676' : parseFloat(breakdown.news.score) < 0 ? '#ff1744' : '#FFD700', fontWeight: "600" }}>{breakdown.news.signal} ({parseFloat(breakdown.news.score) > 0 ? '+' : ''}{breakdown.news.score})</span>
+            </div>
+          </div>
+          <div style={{ marginTop: "12px", padding: "10px", backgroundColor: "#2962ff15", borderRadius: "4px", border: "1px solid #2962ff50", textAlign: "center" }}>
+            <span style={{ color: "#787b86", fontSize: "11px" }}>Total Score: </span>
+            <span style={{ color: "#2962ff", fontWeight: "700", fontSize: "16px" }}>{breakdown.total}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
