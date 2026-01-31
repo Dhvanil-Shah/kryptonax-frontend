@@ -8,6 +8,7 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
   const [compendium, setCompendium] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
     const fetchCompanyDetails = async () => {
@@ -121,13 +122,6 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
               <h3>About</h3>
               <p>{companyHistory.description}</p>
             </div>
-            {companyHistory.website && companyHistory.website !== 'N/A' && (
-              <div className="website-section">
-                <a href={companyHistory.website} target="_blank" rel="noopener noreferrer" className="website-link">
-                  Visit Website →
-                </a>
-              </div>
-            )}
           </div>
         )}
 
@@ -174,9 +168,13 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                           <td className="quarter-label">{quarter}</td>
                           <td>{data.date}</td>
                           <td>
-                            <a href={data.url} className="report-link" title="Download Report">
+                            <button 
+                              className="report-link" 
+                              onClick={() => setSelectedReport({...data, quarter, reportType: report.name})}
+                              title="View Report"
+                            >
                               📄 View
-                            </a>
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -184,6 +182,37 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                   </table>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {selectedReport && (
+          <div className="report-modal-overlay" onClick={() => setSelectedReport(null)}>
+            <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setSelectedReport(null)}>✕</button>
+              <div className="report-modal-content">
+                <h3 className="report-modal-title">{selectedReport.reportType}</h3>
+                <div className="report-meta">
+                  <span className="report-quarter">{selectedReport.quarter}</span>
+                  <span className="report-date">{selectedReport.date}</span>
+                </div>
+                <div className="report-placeholder">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="11" x2="12" y2="17"></line>
+                    <line x1="9" y1="14" x2="15" y2="14"></line>
+                  </svg>
+                  <p>Report Document</p>
+                  <span className="report-status">Available for Download</span>
+                </div>
+                <p className="report-description">
+                  This comprehensive financial report contains detailed analysis, metrics, and insights for the selected period.
+                </p>
+                <button className="download-btn" disabled>
+                  📥 Download Report (Coming Soon)
+                </button>
+              </div>
             </div>
           </div>
         )}
