@@ -767,9 +767,11 @@ import {
   CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine 
 } from 'recharts';
 import ReactGA from "react-ga4";
+import ChatBot from './ChatBot';
 
 // --- CONFIGURATION ---
-const API_BASE_URL = "https://kryptonax-backend.onrender.com";
+// Prefer a local backend when developing (auto-detect via hostname)
+const API_BASE_URL = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) ? 'http://127.0.0.1:8000' : 'https://kryptonax-backend.onrender.com';
 ReactGA.initialize("G-REEV9CZE52");
 
 // --- ICONS ---
@@ -949,6 +951,7 @@ function App() {
   const [otpCode, setOtpCode] = useState(""); 
   
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showChatBot, setShowChatBot] = useState(false);
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
 
@@ -973,7 +976,7 @@ function App() {
     document.body.style.padding = "0"; 
     document.body.style.backgroundColor = "#131722"; 
     document.body.style.boxSizing = "border-box";
-    fetchTrending(); 
+        fetchTrending(moverRegion); 
     fetchGeneralNews();
     
     // Load local storage
@@ -1017,8 +1020,18 @@ function App() {
   }, [searchedTicker, chartRange, activeComparison, view]);
 
   useEffect(() => { 
-      if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
+            if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
   }, [chartRange]); 
+
+    // Re-fetch trending when moverRegion changes and poll periodically
+    useEffect(() => {
+        let id = null;
+        fetchTrending(moverRegion);
+        try {
+            id = setInterval(() => fetchTrending(moverRegion), 15000); // refresh every 15s
+        } catch (e) { }
+        return () => { if (id) clearInterval(id); };
+    }, [moverRegion]);
 
   // --- FEATURE HANDLERS ---
   const toggleWatchLater = (article) => {
@@ -1241,7 +1254,13 @@ const toggleNotification = async (t) => {
       } catch (e) { } 
   };
 
-  const fetchTrending = async () => { try { const res = await fetch(`${API_BASE_URL}/trending`); setTrending(await res.json()); } catch (e) {} };
+    const fetchTrending = async (region = 'all') => { 
+        try { 
+            const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); 
+            const data = await res.json(); 
+            setTrending(data);
+        } catch (e) { console.error('fetchTrending failed', e); } 
+    };
   
   const fetchFavorites = async () => { 
       try { 
@@ -1328,7 +1347,7 @@ const toggleNotification = async (t) => {
 
       <nav style={{ backgroundColor: "#1e222d", padding: "15px 40px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid #2a2e39", position: "sticky", top: 0, zIndex: 1000 }}>
         <div style={{ fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "20px" }}><span onClick={() => setView("dashboard")} style={{cursor: "pointer"}}><span style={{ color: "#2962ff" }}>KRYPTONAX</span> | <span style={{fontSize: "16px", fontWeight: "normal", color: "#787b86"}}>Financial Intelligence</span></span>{searchedTicker && view === "dashboard" && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}</div>
-        <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
+        <div style={{display: "flex", alignItems: "center", gap: "25px"}}><span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>Chat with Bot</span><span onClick={() => setView("about")} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>{userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}{token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
       </nav>
 
       {/* --- AUTH MODAL --- */}
@@ -1606,9 +1625,53 @@ const toggleNotification = async (t) => {
         </div>
       )}
       <footer style={{ backgroundColor: "#1e222d", borderTop: "1px solid #2a2e39", padding: "60px 20px", marginTop: "auto" }}> <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "40px" }}> <div style={{ maxWidth: "300px" }}> <h2 style={{ fontSize: "24px", color: "#ffffff", marginBottom: "15px" }}><span style={{ color: "#2962ff" }}>KRYPTONAX</span></h2> <p style={{ color: "#787b86", fontSize: "14px", lineHeight: "1.6" }}>The #1 financial intelligence platform for students and professionals. Real-time data, AI sentiment analysis, and institutional-grade charting in one place.</p> </div> <div style={{ display: "flex", gap: "60px", flexWrap: "wrap" }}> <div> <h4 style={{ color: "white", marginBottom: "20px" }}>Product</h4> <ul style={{ listStyle: "none", padding: 0, color: "#787b86", fontSize: "14px", lineHeight: "2.5" }}> <li>Charting</li> <li>AI Sentiment</li> <li>Screeners</li> <li>Pricing</li> </ul> </div> </div> </div> <div style={{ textAlign: "center", borderTop: "1px solid #2a2e39", marginTop: "40px", paddingTop: "20px", color: "#555", fontSize: "12px" }}>&copy; 2024 Kryptonax Financial Inc. All rights reserved. Data provided by Yahoo Finance & NewsAPI.</div> </footer>
+
+      {/* --- FLOATING ACTION BUTTON (ChatBot FAB) --- */}
+      <button
+        onClick={() => setShowChatBot(true)}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          backgroundColor: '#2962ff',
+          border: 'none',
+          color: 'white',
+          fontSize: '28px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(41, 98, 255, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999,
+          transition: 'all 0.3s ease',
+          fontWeight: 'bold'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.boxShadow = '0 6px 30px rgba(41, 98, 255, 0.6)';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.boxShadow = '0 4px 20px rgba(41, 98, 255, 0.4)';
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        💬
+      </button>
+
+      {/* --- CHATBOT MODAL --- */}
+      <ChatBot
+        isOpen={showChatBot}
+        onClose={() => setShowChatBot(false)}
+        apiBaseUrl={API_BASE_URL}
+        ticker={searchedTicker}
+      />
     </div>
   );
 }
 
 export default App;
+
 
