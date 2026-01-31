@@ -1153,28 +1153,29 @@ const toggleNotification = async (t) => {
                     </div>
 
                     {/* Professional Pagination */}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '20px', backgroundColor: '#131722', borderRadius: '12px', border: '1px solid #2a2e39' }}>
-                      {/* Previous Button */}
-                      <button
-                        onClick={() => { setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                        disabled={currentNewsIndex === 0}
-                        style={{
-                          padding: '10px 16px',
-                          borderRadius: '8px',
-                          border: '1px solid #2a2e39',
-                          backgroundColor: currentNewsIndex === 0 ? '#1e222d' : '#2962ff',
-                          color: currentNewsIndex === 0 ? '#787b86' : 'white',
-                          cursor: currentNewsIndex === 0 ? 'not-allowed' : 'pointer',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          transition: 'all 0.2s',
-                          opacity: currentNewsIndex === 0 ? 0.5 : 1
-                        }}
-                        onMouseEnter={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#1e4ba8'; }}
-                        onMouseLeave={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#2962ff'; }}
-                      >
-                        Previous
-                      </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '20px', backgroundColor: '#131722', borderRadius: '12px', border: '1px solid #2a2e39' }}>
+                        {/* Previous Button */}
+                        <button
+                          onClick={() => { setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          disabled={currentNewsIndex === 0}
+                          style={{
+                            padding: '10px 16px',
+                            borderRadius: '8px',
+                            border: '1px solid #2a2e39',
+                            backgroundColor: currentNewsIndex === 0 ? '#1e222d' : '#2962ff',
+                            color: currentNewsIndex === 0 ? '#787b86' : 'white',
+                            cursor: currentNewsIndex === 0 ? 'not-allowed' : 'pointer',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            transition: 'all 0.2s',
+                            opacity: currentNewsIndex === 0 ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#1e4ba8'; }}
+                          onMouseLeave={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#2962ff'; }}
+                        >
+                          Previous
+                        </button>
 
                       {/* Page Numbers */}
                       {(() => {
@@ -1266,27 +1267,87 @@ const toggleNotification = async (t) => {
                       </button>
                     </div>
 
-                    {/* Keyboard Shortcuts Info */}
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1e222d', borderRadius: '8px', border: '1px solid #2a2e39', textAlign: 'center' }}>
-                      <div style={{ fontSize: '11px', color: '#787b86', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Keyboard Shortcuts</div>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '12px', color: '#9fb3ff', flexWrap: 'wrap' }}>
-                        <span>← / → Navigate</span>
-                        <span>🏠 Home</span>
-                        <span>1-9 Jump to page</span>
+                      {/* Direct Page Jump */}
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', padding: '20px', backgroundColor: '#1e222d', borderRadius: '12px', border: '1px solid #2a2e39' }}>
+                        <label style={{ fontSize: '14px', color: '#d1d4dc', fontWeight: '600' }}>
+                          Go to Article:
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={newsToShow.length}
+                          placeholder={`1-${newsToShow.length}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const pageNum = parseInt(e.target.value);
+                              if (pageNum >= 1 && pageNum <= newsToShow.length) {
+                                setCurrentNewsIndex(pageNum - 1);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                e.target.value = '';
+                              }
+                            }
+                          }}
+                          style={{
+                            width: '80px',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #2a2e39',
+                            backgroundColor: '#131722',
+                            color: '#d1d4dc',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            textAlign: 'center',
+                            outline: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = '#2962ff';
+                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(41, 98, 255, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = '#2a2e39';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling;
+                            const pageNum = parseInt(input.value);
+                            if (pageNum >= 1 && pageNum <= newsToShow.length) {
+                              setCurrentNewsIndex(pageNum - 1);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                              input.value = '';
+                            } else {
+                              alert(`Please enter a number between 1 and ${newsToShow.length}`);
+                            }
+                          }}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: '#2962ff',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 8px rgba(41, 98, 255, 0.3)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#1e4ba8';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(41, 98, 255, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#2962ff';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(41, 98, 255, 0.3)';
+                          }}
+                        >
+                          Go
+                        </button>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      ) : (
-        <div style={{ display: "flex", maxWidth: "1600px", margin: "30px auto", gap: "20px", padding: "0 20px", flex: 1, width: "100%", boxSizing: "border-box" }}>
-            
-            {/* SIDEBAR - NOW WITH WATCH LATER */}
-            {!searchedTicker && (
-                <aside style={{ width: "300px", backgroundColor: "#1e222d", padding: "20px", borderRadius: "4px", border: "1px solid #2a2e39", height: "fit-content" }}>
                     <h3 style={{ borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>⭐ My Watchlist</h3>
                     {!token && <p style={{fontSize: "12px", color: "#787b86"}}>Login to save your favorites.</p>}
                     <div style={{ display: "flex", gap: "5px", marginBottom: "20px", position: "relative" }}> <input type="text" placeholder="Add Ticker..." value={newFav} onChange={(e) => { setNewFav(e.target.value.toUpperCase()); setShowFavSuggestions(true); fetchSuggestions(e.target.value, true); }} style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white" }} /> <button onClick={() => toggleFavorite(newFav)} style={{ background: "#2962ff", color: "white", border: "none", borderRadius: "4px", padding: "0 15px", cursor: "pointer" }}>+</button> {showFavSuggestions && favSuggestions.length > 0 && ( <div style={{ position: "absolute", top: "40px", left: 0, width: "100%", backgroundColor: "#1e222d", zIndex: 10, border: "1px solid #2a2e39", boxShadow: "0 4px 10px rgba(0,0,0,0.5)" }}> {favSuggestions.map(s => <div key={s.symbol} onClick={() => toggleFavorite(s.symbol)} style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid #2a2e39", fontSize: "13px" }}><span style={{fontWeight: "bold", color: "#2962ff"}}>{s.symbol}</span> <span style={{color: "#787b86"}}>({s.name})</span></div>)} </div> )} </div>
