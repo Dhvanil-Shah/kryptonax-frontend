@@ -17,6 +17,7 @@ body {
   padding: 15px 40px !important;
   display: flex !important;
   justify-content: space-between !important;
+  flex-wrap: wrap !important;
 }
 
 .nav-brand {
@@ -24,12 +25,36 @@ body {
   display: flex !important;
   align-items: center !important;
   gap: 20px !important;
+  flex-wrap: wrap !important;
 }
 
 .nav-menu {
   display: flex !important;
   align-items: center !important;
   gap: 25px !important;
+  flex-wrap: wrap !important;
+}
+
+nav {
+  background-color: #1e222d !important;
+  border-bottom: 1px solid #2a2e39 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+}
+
+nav > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+nav > div:last-child {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
 }
 
 /* Search Container */
@@ -92,6 +117,51 @@ body {
 
 /* Mobile Styles (max-width: 768px) */
 @media (max-width: 768px) {
+  nav {
+    padding: 10px 15px !important;
+  }
+
+  nav > div:first-child {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin-bottom: 10px !important;
+    font-size: 18px !important;
+  }
+
+  nav > div:first-child > span > span:first-child {
+    font-size: 18px !important;
+  }
+
+  nav > div:first-child > span > span:last-child {
+    font-size: 12px !important;
+    display: block !important;
+  }
+
+  nav > div:first-child button {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    white-space: nowrap !important;
+  }
+
+  nav > div:last-child {
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    font-size: 12px !important;
+  }
+
+  nav > div:last-child span {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  nav > div:last-child button {
+    font-size: 11px !important;
+    padding: 6px 12px !important;
+    white-space: nowrap !important;
+  }
+
   .nav-container {
     padding: 12px 15px !important;
     flex-direction: column !important;
@@ -332,6 +402,13 @@ body {
   display: block !important;
 }
 
+/* Chatbot button fix for mobile */
+[style*="position: fixed"][style*="bottom: 20px"][style*="right: 20px"] {
+  bottom: 80px !important;
+  right: 15px !important;
+  z-index: 999 !important;
+}
+
 @media (max-width: 768px) {
   .mobile-only {
     display: block !important;
@@ -339,6 +416,12 @@ body {
 
   .desktop-only {
     display: none !important;
+  }
+
+  /* Force chatbot button to better position */
+  [style*="position: fixed"][style*="bottom"] {
+    bottom: 20px !important;
+    right: 15px !important;
   }
 }
 
