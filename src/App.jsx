@@ -860,6 +860,13 @@ const toggleNotification = async (t) => {
           setCurrentNewsIndex(currentNewsIndex + 1);
           if (fullPageNewsView) window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+      } else if (fullPageNewsView && e.key >= '1' && e.key <= '9') {
+        // Jump to page number (1-9)
+        const pageNum = parseInt(e.key) - 1;
+        if (pageNum <= maxIndex) {
+          setCurrentNewsIndex(pageNum);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     };
 
@@ -880,8 +887,8 @@ const toggleNotification = async (t) => {
           {searchedTicker && view === "dashboard" && !fullPageNewsView && <button onClick={handleReset} style={{ fontSize: "14px", padding: "5px 15px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer" }}>← Back to Home</button>}
         </div>
         <div style={{display: "flex", alignItems: "center", gap: "25px"}}>
-          {!fullPageNewsView && <button onClick={() => { setView("dashboard"); setFullPageNewsView(false); handleReset(); }} style={{ fontSize: "14px", padding: "8px 16px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.3s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2962ff"; e.currentTarget.style.borderColor = "#2962ff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.borderColor = "#787b86"; }}>🏠 Home</button>}
-          <span onClick={() => { setFullPageNewsView(true); setView("dashboard"); }} style={{cursor: "pointer", color: fullPageNewsView ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px"}}>📰 Read Top Trending News</span>
+          {fullPageNewsView && <button onClick={() => { setView("dashboard"); setFullPageNewsView(false); handleReset(); }} style={{ fontSize: "14px", padding: "8px 16px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.3s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2962ff"; e.currentTarget.style.borderColor = "#2962ff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.borderColor = "#787b86"; }}>🏠 Home</button>}
+          <span onClick={() => { setFullPageNewsView(true); setView("dashboard"); setCurrentNewsIndex(0); }} style={{cursor: "pointer", color: fullPageNewsView ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px"}}>📰 Read Top Trending News</span>
           <span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>💬 Chat with Bot</span>
           <span onClick={() => { setView("about"); setFullPageNewsView(false); }} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>
           {userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}
@@ -971,7 +978,15 @@ const toggleNotification = async (t) => {
             const entityInfo = inferEntityInfo(currentArticle, articleCat);
 
             return (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '30px', alignItems: 'start' }}>
+              <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                {/* Article Counter */}
+                <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '15px 25px', border: '1px solid #2a2e39', marginBottom: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+                  <div style={{ fontSize: '13px', color: '#787b86', textTransform: 'uppercase', letterSpacing: '1px' }}>Article</div>
+                  <div style={{ fontSize: '24px', color: '#2962ff', fontWeight: 'bold' }}>
+                    {currentNewsIndex + 1} <span style={{ fontSize: '16px', color: '#787b86' }}>/ {newsToShow.length}</span>
+                  </div>
+                </div>
+
                 {/* Main Content */}
                 <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '40px', border: '1px solid #2a2e39' }}>
                   {/* Category and Sentiment Badges */}
@@ -1077,96 +1092,190 @@ const toggleNotification = async (t) => {
                     <span>Read Full Article on {currentArticle.source?.name || 'Publisher\'s Website'}</span>
                     <span style={{ fontSize: '20px' }}>→</span>
                   </a>
-                </div>
 
-                {/* Sidebar Navigation */}
-                <div style={{ position: 'sticky', top: '100px' }}>
-                  {/* Article Counter */}
-                  <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '20px', border: '1px solid #2a2e39', marginBottom: '20px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', color: '#787b86', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Article</div>
-                    <div style={{ fontSize: '32px', color: '#2962ff', fontWeight: 'bold' }}>
-                      {currentNewsIndex + 1} <span style={{ fontSize: '20px', color: '#787b86' }}>of {newsToShow.length}</span>
+                  {/* Bottom Navigation */}
+                  <div style={{ marginTop: '50px', paddingTop: '40px', borderTop: '2px solid #2a2e39' }}>
+                    {/* Previous/Next Buttons */}
+                    <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
+                      <button 
+                        onClick={() => { setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={currentNewsIndex === 0}
+                        style={{ 
+                          flex: 1,
+                          padding: "18px 32px", 
+                          borderRadius: "10px", 
+                          border: "none", 
+                          background: currentNewsIndex === 0 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
+                          color: currentNewsIndex === 0 ? "#787b86" : "white",
+                          fontSize: "16px", 
+                          fontWeight: "700",
+                          cursor: currentNewsIndex === 0 ? "not-allowed" : "pointer",
+                          transition: "all 0.3s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "12px",
+                          boxShadow: currentNewsIndex === 0 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
+                        }}
+                        onMouseEnter={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
+                        onMouseLeave={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
+                      >
+                        <span style={{ fontSize: '20px' }}>←</span>
+                        <span>Previous Article</span>
+                      </button>
+
+                      <button 
+                        onClick={() => { setCurrentNewsIndex(Math.min(newsToShow.length - 1, currentNewsIndex + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={currentNewsIndex === newsToShow.length - 1}
+                        style={{ 
+                          flex: 1,
+                          padding: "18px 32px", 
+                          borderRadius: "10px", 
+                          border: "none", 
+                          background: currentNewsIndex === newsToShow.length - 1 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
+                          color: currentNewsIndex === newsToShow.length - 1 ? "#787b86" : "white",
+                          fontSize: "16px", 
+                          fontWeight: "700",
+                          cursor: currentNewsIndex === newsToShow.length - 1 ? "not-allowed" : "pointer",
+                          transition: "all 0.3s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "12px",
+                          boxShadow: currentNewsIndex === newsToShow.length - 1 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
+                        }}
+                        onMouseEnter={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
+                        onMouseLeave={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
+                      >
+                        <span>Next Article</span>
+                        <span style={{ fontSize: '20px' }}>→</span>
+                      </button>
                     </div>
-                  </div>
 
-                  {/* Navigation Buttons */}
-                  <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '25px', border: '1px solid #2a2e39' }}>
-                    <h3 style={{ color: '#d1d4dc', fontSize: '16px', marginBottom: '20px', textAlign: 'center' }}>Navigation</h3>
-                    
-                    <button 
-                      onClick={() => setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1))}
-                      disabled={currentNewsIndex === 0}
-                      style={{ 
-                        width: '100%',
-                        padding: "16px 24px", 
-                        borderRadius: "10px", 
-                        border: "none", 
-                        background: currentNewsIndex === 0 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
-                        color: currentNewsIndex === 0 ? "#787b86" : "white",
-                        fontSize: "15px", 
-                        fontWeight: "700",
-                        cursor: currentNewsIndex === 0 ? "not-allowed" : "pointer",
-                        transition: "all 0.3s",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "10px",
-                        marginBottom: '15px',
-                        boxShadow: currentNewsIndex === 0 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
-                      }}
-                      onMouseEnter={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
-                      onMouseLeave={(e) => { if (currentNewsIndex !== 0) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
-                    >
-                      <span style={{ fontSize: '20px' }}>⬆️</span>
-                      <span>Previous News</span>
-                    </button>
+                    {/* Professional Pagination */}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '20px', backgroundColor: '#131722', borderRadius: '12px', border: '1px solid #2a2e39' }}>
+                      {/* Previous Button */}
+                      <button
+                        onClick={() => { setCurrentNewsIndex(Math.max(0, currentNewsIndex - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={currentNewsIndex === 0}
+                        style={{
+                          padding: '10px 16px',
+                          borderRadius: '8px',
+                          border: '1px solid #2a2e39',
+                          backgroundColor: currentNewsIndex === 0 ? '#1e222d' : '#2962ff',
+                          color: currentNewsIndex === 0 ? '#787b86' : 'white',
+                          cursor: currentNewsIndex === 0 ? 'not-allowed' : 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          transition: 'all 0.2s',
+                          opacity: currentNewsIndex === 0 ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#1e4ba8'; }}
+                        onMouseLeave={(e) => { if (currentNewsIndex !== 0) e.currentTarget.style.backgroundColor = '#2962ff'; }}
+                      >
+                        Previous
+                      </button>
 
-                    <button 
-                      onClick={() => setCurrentNewsIndex(Math.min(newsToShow.length - 1, currentNewsIndex + 1))}
-                      disabled={currentNewsIndex === newsToShow.length - 1}
-                      style={{ 
-                        width: '100%',
-                        padding: "16px 24px", 
-                        borderRadius: "10px", 
-                        border: "none", 
-                        background: currentNewsIndex === newsToShow.length - 1 ? "#2a2e39" : "linear-gradient(135deg, #2962ff 0%, #1e4ba8 100%)",
-                        color: currentNewsIndex === newsToShow.length - 1 ? "#787b86" : "white",
-                        fontSize: "15px", 
-                        fontWeight: "700",
-                        cursor: currentNewsIndex === newsToShow.length - 1 ? "not-allowed" : "pointer",
-                        transition: "all 0.3s",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "10px",
-                        boxShadow: currentNewsIndex === newsToShow.length - 1 ? 'none' : '0 4px 15px rgba(41, 98, 255, 0.3)'
-                      }}
-                      onMouseEnter={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(41, 98, 255, 0.5)'; } }}
-                      onMouseLeave={(e) => { if (currentNewsIndex !== newsToShow.length - 1) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(41, 98, 255, 0.3)'; } }}
-                    >
-                      <span>Next News</span>
-                      <span style={{ fontSize: '20px' }}>⬇️</span>
-                    </button>
+                      {/* Page Numbers */}
+                      {(() => {
+                        const totalPages = newsToShow.length;
+                        const currentPage = currentNewsIndex + 1;
+                        const pageNumbers = [];
+                        
+                        // Always show first page
+                        if (totalPages > 0) pageNumbers.push(1);
+                        
+                        // Show dots if needed
+                        if (currentPage > 4) pageNumbers.push('...');
+                        
+                        // Show pages around current
+                        for (let i = Math.max(2, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
+                          pageNumbers.push(i);
+                        }
+                        
+                        // Show dots if needed
+                        if (currentPage < totalPages - 3) pageNumbers.push('...');
+                        
+                        // Always show last page
+                        if (totalPages > 1) pageNumbers.push(totalPages);
+                        
+                        return pageNumbers.map((page, idx) => {
+                          if (page === '...') {
+                            return (
+                              <span key={`dots-${idx}`} style={{ padding: '0 8px', color: '#787b86', fontSize: '18px' }}>...</span>
+                            );
+                          }
+                          
+                          const isActive = page === currentPage;
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => { setCurrentNewsIndex(page - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                              style={{
+                                minWidth: '40px',
+                                height: '40px',
+                                borderRadius: '8px',
+                                border: isActive ? '2px solid #2962ff' : '1px solid #2a2e39',
+                                backgroundColor: isActive ? '#2962ff' : '#1e222d',
+                                color: isActive ? 'white' : '#d1d4dc',
+                                cursor: 'pointer',
+                                fontWeight: isActive ? '700' : '500',
+                                fontSize: '14px',
+                                transition: 'all 0.2s',
+                                boxShadow: isActive ? '0 0 15px rgba(41, 98, 255, 0.4)' : 'none'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.backgroundColor = '#2a2e39';
+                                  e.currentTarget.style.borderColor = '#2962ff';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.backgroundColor = '#1e222d';
+                                  e.currentTarget.style.borderColor = '#2a2e39';
+                                }
+                              }}
+                            >
+                              {page}
+                            </button>
+                          );
+                        });
+                      })()}
 
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#131722', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '12px', color: '#787b86', marginBottom: '8px' }}>Quick Navigation</div>
-                      <div style={{ fontSize: '11px', color: '#9fb3ff', lineHeight: '1.6' }}>
-                        <div>⬆️ Scroll Up / Arrow Up</div>
-                        <div>⬇️ Scroll Down / Arrow Down</div>
-                        <div>🏠 Home - Return to Dashboard</div>
+                      {/* Next Button */}
+                      <button
+                        onClick={() => { setCurrentNewsIndex(Math.min(newsToShow.length - 1, currentNewsIndex + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={currentNewsIndex === newsToShow.length - 1}
+                        style={{
+                          padding: '10px 16px',
+                          borderRadius: '8px',
+                          border: '1px solid #2a2e39',
+                          backgroundColor: currentNewsIndex === newsToShow.length - 1 ? '#1e222d' : '#2962ff',
+                          color: currentNewsIndex === newsToShow.length - 1 ? '#787b86' : 'white',
+                          cursor: currentNewsIndex === newsToShow.length - 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          transition: 'all 0.2s',
+                          opacity: currentNewsIndex === newsToShow.length - 1 ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => { if (currentNewsIndex !== newsToShow.length - 1) e.currentTarget.style.backgroundColor = '#1e4ba8'; }}
+                        onMouseLeave={(e) => { if (currentNewsIndex !== newsToShow.length - 1) e.currentTarget.style.backgroundColor = '#2962ff'; }}
+                      >
+                        Next
+                      </button>
+                    </div>
+
+                    {/* Keyboard Shortcuts Info */}
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1e222d', borderRadius: '8px', border: '1px solid #2a2e39', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: '#787b86', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Keyboard Shortcuts</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '12px', color: '#9fb3ff', flexWrap: 'wrap' }}>
+                        <span>← / → Navigate</span>
+                        <span>🏠 Home</span>
+                        <span>1-9 Jump to page</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Related News Preview */}
-                  {newsToShow[currentNewsIndex + 1] && (
-                    <div style={{ backgroundColor: '#1e222d', borderRadius: '12px', padding: '20px', border: '1px solid #2a2e39', marginTop: '20px' }}>
-                      <h4 style={{ color: '#787b86', fontSize: '12px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Article</h4>
-                      <div style={{ fontSize: '14px', color: '#d1d4dc', lineHeight: '1.4', fontWeight: '600' }}>
-                        {newsToShow[currentNewsIndex + 1].title.substring(0, 100)}...
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             );
