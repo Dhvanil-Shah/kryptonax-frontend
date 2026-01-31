@@ -1633,32 +1633,33 @@ const toggleNotification = async (t) => {
           position: 'fixed',
           bottom: '30px',
           right: '30px',
-          width: '60px',
-          height: '60px',
+          width: '64px',
+          height: '64px',
           borderRadius: '50%',
-          backgroundColor: '#2962ff',
+          background: 'linear-gradient(135deg, #4FACFE 0%, #00B4DB 100%)',
           border: 'none',
           color: 'white',
-          fontSize: '28px',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(41, 98, 255, 0.4)',
+          boxShadow: '0 6px 25px rgba(79, 172, 254, 0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 999,
-          transition: 'all 0.3s ease',
-          fontWeight: 'bold'
+          transition: 'all 0.3s ease'
         }}
         onMouseEnter={(e) => {
-          e.target.style.boxShadow = '0 6px 30px rgba(41, 98, 255, 0.6)';
-          e.target.style.transform = 'scale(1.1)';
+          e.target.style.boxShadow = '0 8px 35px rgba(79, 172, 254, 0.7)';
+          e.target.style.transform = 'scale(1.1) translateY(-3px)';
         }}
         onMouseLeave={(e) => {
-          e.target.style.boxShadow = '0 4px 20px rgba(41, 98, 255, 0.4)';
-          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 6px 25px rgba(79, 172, 254, 0.5)';
+          e.target.style.transform = 'scale(1) translateY(0)';
         }}
       >
-        💬
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 13h2v7H3v-7zm4-6h2v13H7V7zm4-4h2v17h-2V3zm4 9h2v8h-2v-8zm4-5h2v13h-2V7z" fill="white"/>
+          <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="0.5" opacity="0.3" fill="none"/>
+        </svg>
       </button>
 
       {/* --- CHATBOT MODAL --- */}
