@@ -1,0 +1,271 @@
+.region-filter-container {
+  background-color: #1e222d;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #2a2e39;
+  margin-bottom: 20px;
+}
+
+.region-filter-header h3 {
+  color: #d1d4dc;
+  font-size: 16px;
+  margin: 0 0 8px 0;
+  border-bottom: 1px solid #2a2e39;
+  padding-bottom: 10px;
+}
+
+.filter-description {
+  color: #787b86;
+  font-size: 12px;
+  margin: 0 0 15px 0;
+}
+
+.region-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.region-chip-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.region-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #2a2e39;
+  border: 2px solid #2a2e39;
+  border-radius: 20px;
+  color: #d1d4dc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.region-chip:hover {
+  background-color: #363b4a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(41, 98, 255, 0.15);
+}
+
+.region-chip.selected {
+  background-color: #2962ff;
+  border-color: #2962ff;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(41, 98, 255, 0.3);
+}
+
+.region-chip.selected:hover {
+  background-color: #1e4ed8;
+  box-shadow: 0 6px 16px rgba(41, 98, 255, 0.4);
+}
+
+.region-name {
+  white-space: nowrap;
+}
+
+.state-count {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.state-toggle-btn {
+  background-color: #2a2e39;
+  border: 1px solid #2962ff;
+  color: #2962ff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.state-toggle-btn:hover {
+  background-color: #2962ff;
+  color: white;
+  transform: scale(1.1);
+}
+
+.state-toggle-btn.active {
+  background-color: #2962ff;
+  color: white;
+  transform: rotate(90deg);
+}
+
+.state-chips-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background-color: #1e222d;
+  border: 1px solid #2962ff;
+  border-radius: 8px;
+  padding: 12px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 250px;
+  max-width: 400px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.state-chips-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2e39;
+  color: #d1d4dc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.clear-states-btn {
+  background: none;
+  border: none;
+  color: #ff1744;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clear-states-btn:hover {
+  background-color: rgba(255, 23, 68, 0.1);
+  transform: scale(1.05);
+}
+
+.state-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for state chips */
+.state-chips::-webkit-scrollbar {
+  width: 6px;
+}
+
+.state-chips::-webkit-scrollbar-track {
+  background: #131722;
+  border-radius: 3px;
+}
+
+.state-chips::-webkit-scrollbar-thumb {
+  background: #2a2e39;
+  border-radius: 3px;
+}
+
+.state-chips::-webkit-scrollbar-thumb:hover {
+  background: #2962ff;
+}
+
+.state-chip {
+  padding: 6px 12px;
+  background-color: #2a2e39;
+  border: 1px solid #363b4a;
+  border-radius: 15px;
+  color: #d1d4dc;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.state-chip:hover {
+  background-color: #363b4a;
+  border-color: #2962ff;
+  transform: translateY(-1px);
+}
+
+.state-chip.selected {
+  background-color: #00e676;
+  border-color: #00e676;
+  color: #131722;
+  font-weight: 600;
+}
+
+.state-chip.selected:hover {
+  background-color: #00c853;
+  border-color: #00c853;
+}
+
+.active-filters-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(41, 98, 255, 0.05);
+  border: 1px solid rgba(41, 98, 255, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.summary-label {
+  color: #787b86;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.summary-tag {
+  background-color: rgba(41, 98, 255, 0.15);
+  color: #2962ff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(41, 98, 255, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .region-filter-container {
+    padding: 15px;
+  }
+  
+  .region-chips {
+    gap: 8px;
+  }
+  
+  .region-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .state-chips-dropdown {
+    min-width: 200px;
+    max-width: 300px;
+  }
+}

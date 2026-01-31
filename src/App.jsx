@@ -5,6 +5,7 @@
 // } from 'recharts';
 // import ReactGA from "react-ga4";
 // import ChatBot from './ChatBot';
+// import RegionFilter from './RegionFilter';
 
 // // --- CONFIGURATION ---
 // // Prefer a local backend when developing (auto-detect via hostname)
@@ -1306,6 +1307,8 @@ function App() {
   const [notifications, setNotifications] = useState([]); 
     const [moverRegion, setMoverRegion] = useState("all");
     const [newsCategory, setNewsCategory] = useState("all");
+  const [selectedRegions, setSelectedRegions] = useState(['all']);
+  const [selectedStates, setSelectedStates] = useState({});
   const [showAdvancedChart, setShowAdvancedChart] = useState(false);
 
   // --- AUTH STATES ---
@@ -1352,7 +1355,7 @@ function App() {
     document.body.style.padding = "0"; 
     document.body.style.backgroundColor = "#131722"; 
     document.body.style.boxSizing = "border-box";
-        fetchTrending(moverRegion); 
+        fetchTrending(selectedRegions, selectedStates); 
     fetchGeneralNews();
     
     // Load local storage
@@ -1371,6 +1374,11 @@ function App() {
         handleSearch(lastTicker); 
     }
   }, []); // Run once on mount
+
+  // Update trending data when region filters change
+  useEffect(() => {
+    fetchTrending(selectedRegions, selectedStates);
+  }, [selectedRegions, selectedStates]);
 
   useEffect(() => {
       if (token) { 
@@ -1632,9 +1640,14 @@ const toggleNotification = async (t) => {
       } catch (e) { } 
   };
 
-    const fetchTrending = async (region = 'all') => { 
-        try { 
-            const res = await fetch(`${API_BASE_URL}/trending?region=${region}`); 
+    const fetchTrending = async (regions = ['all'], states = {}) => { 
+        try {
+            const regionsParam = regions.join(',');
+            const statesParam = Object.keys(states).length > 0 ? encodeURIComponent(JSON.stringify(states)) : '';
+            const url = statesParam 
+                ? `${API_BASE_URL}/trending?regions=${regionsParam}&states=${statesParam}`
+                : `${API_BASE_URL}/trending?regions=${regionsParam}`;
+            const res = await fetch(url); 
             const data = await res.json(); 
             setTrending(data);
         } catch (e) { console.error('fetchTrending failed', e); } 
@@ -1700,15 +1713,9 @@ const toggleNotification = async (t) => {
     }, [generalNews, newsSearch, newsCategory]);
 
     const filteredTrending = useMemo(() => {
-        if (!trending || trending.length === 0) return [];
-        if (moverRegion === 'all') return trending;
-        return trending.filter(t => {
-            const s = (t.ticker || '').toUpperCase();
-            if (moverRegion === 'india') return /\.NS|\.BO|RELIANCE|TCS|INFY|HDFCBANK/.test(s);
-            if (moverRegion === 'us') return !(/\.NS|\.BO/.test(s));
-            return true;
-        });
-    }, [trending, moverRegion]);
+        // Backend now handles all region filtering
+        return trending || [];
+    }, [trending]);
 
   const sentimentCounts = useMemo(() => [ 
       { name: 'Positive', value: news.filter(n => n.sentiment === 'positive').length }, 
@@ -1800,14 +1807,16 @@ const toggleNotification = async (t) => {
                         </>
                     )}
 
+                    {/* REGION FILTER - Customize Results by Region/Country */}
+                    <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🌍 Filter by Region</h3>
+                    <RegionFilter
+                        selectedRegions={selectedRegions}
+                        selectedStates={selectedStates}
+                        onRegionsChange={setSelectedRegions}
+                        onStatesChange={setSelectedStates}
+                    />
+
                                         <h3 style={{ marginTop: "30px", borderBottom: "1px solid #2a2e39", paddingBottom: "10px", color: "#d1d4dc", fontSize: "16px" }}>🚀 Top Movers</h3>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
-                                                <select value={moverRegion} onChange={(e) => setMoverRegion(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #2a2e39", backgroundColor: "#131722", color: "white", cursor: "pointer" }}>
-                                                        <option value="all">All (Main Mix)</option>
-                                                        <option value="india">India</option>
-                                                        <option value="us">US</option>
-                                                </select>
-                                        </div>
                                         <ul style={{ listStyle: "none", padding: 0 }}>
                                             {filteredTrending.map((t, i) => (
                                                 <li key={t.ticker || i} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: "1px solid #2a2e39" }}>
