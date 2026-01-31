@@ -494,24 +494,6 @@ function App() {
             if (searchedTicker && view === "dashboard") updateChart(searchedTicker, chartRange, activeComparison); 
   }, [chartRange]); 
 
-  // Keyboard navigation for news reader
-  useEffect(() => {
-    if (!showNewsReader) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setShowNewsReader(false);
-      } else if (e.key === 'ArrowLeft' && currentNewsIndex > 0) {
-        setCurrentNewsIndex(currentNewsIndex - 1);
-      } else if (e.key === 'ArrowRight' && currentNewsIndex < filteredGeneralNews.length - 1) {
-        setCurrentNewsIndex(currentNewsIndex + 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showNewsReader, currentNewsIndex, filteredGeneralNews.length]); 
-
     // Re-fetch trending when moverRegion changes and poll periodically
     useEffect(() => {
         let id = null;
@@ -853,6 +835,24 @@ const toggleNotification = async (t) => {
   ], [news]);
   
   const activeData = sentimentCounts.filter(item => item.value > 0);
+
+  // Keyboard navigation for news reader - AFTER filteredGeneralNews is defined
+  useEffect(() => {
+    if (!showNewsReader) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowNewsReader(false);
+      } else if (e.key === 'ArrowLeft' && currentNewsIndex > 0) {
+        setCurrentNewsIndex(currentNewsIndex - 1);
+      } else if (e.key === 'ArrowRight' && currentNewsIndex < filteredGeneralNews.length - 1) {
+        setCurrentNewsIndex(currentNewsIndex + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showNewsReader, currentNewsIndex, filteredGeneralNews.length]);
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#131722", minHeight: "100vh", color: "#d1d4dc", display: "flex", flexDirection: "column" }}>
