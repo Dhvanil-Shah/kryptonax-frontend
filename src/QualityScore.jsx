@@ -16,9 +16,14 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
         
         if (response.ok) {
           const data = await response.json();
-          setQualityData(data);
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setQualityData(data);
+          }
         } else {
-          setError("Quality score not available for this stock");
+          const errorData = await response.json().catch(() => ({}));
+          setError(errorData.detail || "Quality score not available for this stock");
         }
 
         setLoading(false);

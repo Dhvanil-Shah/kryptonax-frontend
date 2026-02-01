@@ -101,12 +101,6 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
         >
           Compendium
         </button>
-        <button
-          className={`tab-btn ${activeTab === 'quality' ? 'active' : ''}`}
-          onClick={() => setActiveTab('quality')}
-        >
-          📊 Quality Score
-        </button>
       </div>
 
       <div className="company-details-content">
@@ -264,10 +258,6 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           )
         )}
 
-        {activeTab === 'quality' && (
-          <QualityScore ticker={ticker} apiBaseUrl={apiBaseUrl} />
-        )}
-
         {selectedReport && (
           <div className="report-modal-overlay" onClick={() => setSelectedReport(null)}>
             <div className="report-modal" onClick={(e) => e.stopPropagation()}>
@@ -310,6 +300,11 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
             {error}
           </div>
         )}
+      </div>
+
+      {/* Quality Score Section - Separate from tabs */}
+      <div style={{ marginTop: '30px' }}>
+        <QualityScore ticker={ticker} apiBaseUrl={apiBaseUrl} />
       </div>
     </div>
   );
