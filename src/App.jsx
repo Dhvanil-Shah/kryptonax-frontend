@@ -1790,27 +1790,6 @@ const toggleNotification = async (t) => {
               </ul> 
             </div> 
           </div> 
-        </div> 
-        
-        {/* Legal Disclaimer */}
-        <div style={{ 
-          maxWidth: "1400px", 
-          margin: "40px auto 0", 
-          padding: "20px", 
-          backgroundColor: "rgba(255, 152, 0, 0.1)", 
-          borderLeft: "4px solid #ff9800",
-          borderRadius: "8px"
-        }}>
-          <h4 style={{ color: "#ff9800", fontSize: "14px", marginBottom: "10px", fontWeight: "600" }}>⚠️ Important Legal Disclaimer</h4>
-          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "8px" }}>
-            <strong>Not Financial Advice:</strong> All content provided on Kryptonax is for informational and educational purposes only. This is NOT professional financial, investment, or legal advice.
-          </p>
-          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "8px" }}>
-            <strong>Data Accuracy:</strong> Stock data is sourced from Yahoo Finance (free public API). Data may be delayed by 15-20 minutes. We do not guarantee accuracy, completeness, or timeliness of data.
-          </p>
-          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "0" }}>
-            <strong>Investment Risk:</strong> Always conduct your own research and consult licensed financial advisors before making investment decisions. Past performance does not indicate future results. Investing involves risk of loss.
-          </p>
         </div>
 
         <div style={{ textAlign: "center", borderTop: "1px solid #2a2e39", marginTop: "40px", paddingTop: "20px", color: "#555", fontSize: "12px" }}>
