@@ -1773,7 +1773,50 @@ const toggleNotification = async (t) => {
             </main>
         </div>
       )}
-      <footer style={{ backgroundColor: "#1e222d", borderTop: "1px solid #2a2e39", padding: "60px 20px", marginTop: "auto" }}> <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "40px" }}> <div style={{ maxWidth: "300px" }}> <h2 style={{ fontSize: "24px", color: "#ffffff", marginBottom: "15px" }}><span style={{ color: "#2962ff" }}>KRYPTONAX</span></h2> <p style={{ color: "#787b86", fontSize: "14px", lineHeight: "1.6" }}>The #1 financial intelligence platform for students and professionals. Real-time data, AI sentiment analysis, and institutional-grade charting in one place.</p> </div> <div style={{ display: "flex", gap: "60px", flexWrap: "wrap" }}> <div> <h4 style={{ color: "white", marginBottom: "20px" }}>Product</h4> <ul style={{ listStyle: "none", padding: 0, color: "#787b86", fontSize: "14px", lineHeight: "2.5" }}> <li>Charting</li> <li>AI Sentiment</li> <li>Screeners</li> <li>Pricing</li> </ul> </div> </div> </div> <div style={{ textAlign: "center", borderTop: "1px solid #2a2e39", marginTop: "40px", paddingTop: "20px", color: "#555", fontSize: "12px" }}>&copy; 2024 Kryptonax Financial Inc. All rights reserved. Data provided by Yahoo Finance & NewsAPI.</div> </footer>
+      <footer style={{ backgroundColor: "#1e222d", borderTop: "1px solid #2a2e39", padding: "60px 20px", marginTop: "auto" }}> 
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "40px" }}> 
+          <div style={{ maxWidth: "300px" }}> 
+            <h2 style={{ fontSize: "24px", color: "#ffffff", marginBottom: "15px" }}><span style={{ color: "#2962ff" }}>KRYPTONAX</span></h2> 
+            <p style={{ color: "#787b86", fontSize: "14px", lineHeight: "1.6" }}>The #1 financial intelligence platform for students and professionals. Real-time data, AI sentiment analysis, and institutional-grade charting in one place.</p> 
+          </div> 
+          <div style={{ display: "flex", gap: "60px", flexWrap: "wrap" }}> 
+            <div> 
+              <h4 style={{ color: "white", marginBottom: "20px" }}>Product</h4> 
+              <ul style={{ listStyle: "none", padding: 0, color: "#787b86", fontSize: "14px", lineHeight: "2.5" }}> 
+                <li>Charting</li> 
+                <li>AI Sentiment</li> 
+                <li>Screeners</li> 
+                <li>Pricing</li> 
+              </ul> 
+            </div> 
+          </div> 
+        </div> 
+        
+        {/* Legal Disclaimer */}
+        <div style={{ 
+          maxWidth: "1400px", 
+          margin: "40px auto 0", 
+          padding: "20px", 
+          backgroundColor: "rgba(255, 152, 0, 0.1)", 
+          borderLeft: "4px solid #ff9800",
+          borderRadius: "8px"
+        }}>
+          <h4 style={{ color: "#ff9800", fontSize: "14px", marginBottom: "10px", fontWeight: "600" }}>⚠️ Important Legal Disclaimer</h4>
+          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "8px" }}>
+            <strong>Not Financial Advice:</strong> All content provided on Kryptonax is for informational and educational purposes only. This is NOT professional financial, investment, or legal advice.
+          </p>
+          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "8px" }}>
+            <strong>Data Accuracy:</strong> Stock data is sourced from Yahoo Finance (free public API). Data may be delayed by 15-20 minutes. We do not guarantee accuracy, completeness, or timeliness of data.
+          </p>
+          <p style={{ color: "#d1d4dc", fontSize: "12px", lineHeight: "1.6", marginBottom: "0" }}>
+            <strong>Investment Risk:</strong> Always conduct your own research and consult licensed financial advisors before making investment decisions. Past performance does not indicate future results. Investing involves risk of loss.
+          </p>
+        </div>
+
+        <div style={{ textAlign: "center", borderTop: "1px solid #2a2e39", marginTop: "40px", paddingTop: "20px", color: "#555", fontSize: "12px" }}>
+          &copy; 2024 Kryptonax Financial Inc. All rights reserved. Data provided by Yahoo Finance & NewsAPI.
+        </div> 
+      </footer>
 
       {/* --- FLOATING ACTION BUTTON (ChatBot FAB) --- */}
       <button
