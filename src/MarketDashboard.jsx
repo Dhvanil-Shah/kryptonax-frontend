@@ -385,8 +385,7 @@ const MarketDashboard = ({ apiBaseUrl }) => {
   return (
     <div className="market-dashboard">
       <div className="dashboard-header">
-        <h2>📊 Live Market Intelligence</h2>
-        <p className="subtitle">Real-time insights for long-term investors • Updates every 60s</p>
+        <p className="dashboard-description">Comprehensive market overview with real-time data across global indices, top movers, sector performance, and key investment metrics</p>
       </div>
 
       <div className="tab-navigation">
