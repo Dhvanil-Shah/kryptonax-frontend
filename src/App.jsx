@@ -1489,6 +1489,8 @@ const toggleNotification = async (t) => {
                         setShowSuggestions(false);
                         setLoading(true);
                         setView("dashboard");
+                        // Trigger the search
+                        setTimeout(() => handleSearch(), 100);
                     }} 
                 />
 

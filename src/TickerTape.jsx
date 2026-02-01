@@ -4,10 +4,12 @@ import './TickerTape.css';
 const TickerTape = ({ region, onStockClick }) => {
   const [stocks, setStocks] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
+  const [isManualScrolling, setIsManualScrolling] = useState(false);
   const scrollContainerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const manualScrollTimeoutRef = useRef(null);
 
   // Stock symbols based on region
   const stockSymbols = {
@@ -89,12 +91,26 @@ const TickerTape = ({ region, onStockClick }) => {
 
   const scrollManual = (direction) => {
     const container = scrollContainerRef.current;
+    if (!container) return;
+    
     const scrollAmount = 300;
+    setIsManualScrolling(true);
+    
+    // Clear existing timeout
+    if (manualScrollTimeoutRef.current) {
+      clearTimeout(manualScrollTimeoutRef.current);
+    }
+    
     if (direction === 'left') {
       container.scrollLeft -= scrollAmount;
     } else {
       container.scrollLeft += scrollAmount;
     }
+    
+    // Resume animation after 2 seconds
+    manualScrollTimeoutRef.current = setTimeout(() => {
+      setIsManualScrolling(false);
+    }, 2000);
   };
 
   const getCurrency = (symbol) => {
@@ -115,7 +131,7 @@ const TickerTape = ({ region, onStockClick }) => {
       </button>
       
       <div 
-        className={`ticker-tape-container ${isHovered ? 'paused' : ''}`}
+        className={`ticker-tape-container ${isHovered || isManualScrolling ? 'paused' : ''}`}
         ref={scrollContainerRef}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
