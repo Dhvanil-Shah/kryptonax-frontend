@@ -55,14 +55,14 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
     );
   }
 
-  const { overall_score, grade, verdict, risks, target, current_price, details, ticker } = qualityData;
+  const { overall_score, grade, verdict, risks, target, current_price, details } = qualityData;
 
   // Detect currency based on ticker
-  const getCurrency = (ticker) => {
-    if (ticker.endsWith('.NS') || ticker.endsWith('.BO')) return '₹'; // Indian stocks
-    if (ticker.endsWith('.L')) return '£'; // London
-    if (ticker.endsWith('.T')) return '¥'; // Tokyo
-    if (ticker.endsWith('.HK')) return 'HK$'; // Hong Kong
+  const getCurrency = (tickerSymbol) => {
+    if (tickerSymbol.endsWith('.NS') || tickerSymbol.endsWith('.BO')) return '₹'; // Indian stocks
+    if (tickerSymbol.endsWith('.L')) return '£'; // London
+    if (tickerSymbol.endsWith('.T')) return '¥'; // Tokyo
+    if (tickerSymbol.endsWith('.HK')) return 'HK$'; // Hong Kong
     return '$'; // Default USD
   };
   
