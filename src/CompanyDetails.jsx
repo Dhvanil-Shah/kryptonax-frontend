@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CompanyDetails.css';
+import QualityScore from './QualityScore';
 
 const CompanyDetails = ({ ticker, apiBaseUrl }) => {
   const [activeTab, setActiveTab] = useState('history');
@@ -98,6 +99,15 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           className={`tab-btn ${activeTab === 'compendium' ? 'active' : ''}`}
           onClick={() => setActiveTab('compendium')}
         >
+          Compendium
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'quality' ? 'active' : ''}`}
+          onClick={() => setActiveTab('quality')}
+        >
+          📊 Quality Score
+        </button>
+      </div>
           Compendium
         </button>
       </div>
@@ -255,6 +265,10 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
               </div>
             </div>
           )
+        )}
+
+        {activeTab === 'quality' && (
+          <QualityScore ticker={ticker} apiBaseUrl={apiBaseUrl} />
         )}
 
         {selectedReport && (
