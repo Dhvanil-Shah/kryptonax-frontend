@@ -1484,13 +1484,7 @@ const toggleNotification = async (t) => {
                 <TickerTape 
                     region={selectedRegions.includes('INDIA') ? 'INDIA' : selectedRegions.includes('USA') ? 'USA' : 'INDIA'} 
                     onStockClick={(symbol) => {
-                        setTicker(symbol);
-                        setSearchedTicker(symbol);
-                        setShowSuggestions(false);
-                        setLoading(true);
-                        setView("dashboard");
-                        // Trigger the search
-                        setTimeout(() => handleSearch(), 100);
+                        handleSearch(symbol);
                     }} 
                 />
 
