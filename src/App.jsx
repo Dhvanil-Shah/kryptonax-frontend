@@ -7,6 +7,7 @@ import ReactGA from "react-ga4";
 import ChatBot from './ChatBot';
 import CompanyDetails from './CompanyDetails';
 import RegionFilter from './RegionFilter';
+import MarketDashboard from './MarketDashboard';
 
 // --- CONFIGURATION ---
 // Prefer a local backend when developing (auto-detect via hostname)
@@ -1477,6 +1478,13 @@ const toggleNotification = async (t) => {
                         <button onClick={() => handleSearch()} disabled={loading} style={{ flex: "0 0 auto", padding: "14px 28px", background: "#2962ff", color: "white", border: "none", borderRadius: "30px", cursor: "pointer", fontWeight: "bold", fontSize: "14px", whiteSpace: "nowrap" }}>Search</button>
                     </div>
                 </div>
+
+                {/* Market Dashboard - Shown on homepage only */}
+                {!searchedTicker && (
+                    <div style={{ marginBottom: "30px" }}>
+                        <MarketDashboard apiBaseUrl={API_BASE_URL} />
+                    </div>
+                )}
 
                 {searchedTicker ? (
                     <>
