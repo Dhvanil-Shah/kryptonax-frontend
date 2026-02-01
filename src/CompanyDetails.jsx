@@ -108,9 +108,6 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           📊 Quality Score
         </button>
       </div>
-          Compendium
-        </button>
-      </div>
 
       <div className="company-details-content">
         {activeTab === 'history' && companyHistory && (
