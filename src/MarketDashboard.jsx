@@ -187,28 +187,75 @@ const MarketDashboard = ({ apiBaseUrl }) => {
         );
       
       case 'sentiment':
+        const sentimentScore = sentiment?.score || 50;
+        const sentimentLevel = sentiment?.level || 'Neutral';
+        const sentimentColor = sentiment?.color || '#fbbf24';
+        
+        // Determine sentiment description and investment suggestion
+        let sentimentDesc = '';
+        let investmentAdvice = '';
+        let sentimentIcon = '';
+        
+        if (sentimentScore <= 25) {
+          sentimentDesc = 'Market participants are extremely fearful. High selling pressure.';
+          investmentAdvice = 'Potential buying opportunity for long-term investors';
+          sentimentIcon = '😨';
+        } else if (sentimentScore <= 45) {
+          sentimentDesc = 'Market showing signs of uncertainty and caution.';
+          investmentAdvice = 'Monitor closely, consider selective buying';
+          sentimentIcon = '😟';
+        } else if (sentimentScore <= 55) {
+          sentimentDesc = 'Market is balanced with no strong directional bias.';
+          investmentAdvice = 'Normal market conditions, trade with caution';
+          sentimentIcon = '😐';
+        } else if (sentimentScore <= 75) {
+          sentimentDesc = 'Optimism in the market with increasing buying interest.';
+          investmentAdvice = 'Consider profit booking on gains';
+          sentimentIcon = '😊';
+        } else {
+          sentimentDesc = 'Market showing excessive optimism. Potential overheating.';
+          investmentAdvice = 'High risk of correction, book profits';
+          sentimentIcon = '🤑';
+        }
+        
         return (
           <div className="tab-content">
             <div className="sentiment-container">
-              <div className="sentiment-gauge">
-                <div className="gauge-background">
-                  <div className="gauge-fill" style={{ 
-                    width: `${sentiment?.score || 50}%`,
-                    backgroundColor: sentiment?.color || '#fbbf24'
-                  }}></div>
+              <div className="sentiment-header">
+                <div className="sentiment-main">
+                  <div className="sentiment-icon">{sentimentIcon}</div>
+                  <div>
+                    <div className="sentiment-score-large">{sentimentScore}</div>
+                    <div className="sentiment-level-text" style={{ color: sentimentColor }}>
+                      {sentimentLevel}
+                    </div>
+                  </div>
                 </div>
-                <div className="sentiment-labels">
-                  <span>Extreme Fear</span>
-                  <span>Fear</span>
-                  <span>Neutral</span>
-                  <span>Greed</span>
-                  <span>Extreme Greed</span>
+                <div className="sentiment-gauge">
+                  <div className="gauge-track">
+                    <div className="gauge-fill" style={{ 
+                      width: `${sentimentScore}%`,
+                      backgroundColor: sentimentColor
+                    }}></div>
+                    <div className="gauge-marker" style={{ left: `${sentimentScore}%` }}></div>
+                  </div>
+                  <div className="gauge-labels">
+                    <span>0<br/>Extreme Fear</span>
+                    <span>25<br/>Fear</span>
+                    <span>50<br/>Neutral</span>
+                    <span>75<br/>Greed</span>
+                    <span>100<br/>Extreme Greed</span>
+                  </div>
                 </div>
               </div>
-              <div className="sentiment-info">
-                <div className="sentiment-score">{sentiment?.score || 50}</div>
-                <div className="sentiment-level" style={{ color: sentiment?.color }}>
-                  {sentiment?.level || 'Neutral'}
+              <div className="sentiment-insights">
+                <div className="insight-card">
+                  <div className="insight-label">Market Analysis</div>
+                  <div className="insight-value">{sentimentDesc}</div>
+                </div>
+                <div className="insight-card">
+                  <div className="insight-label">Investment Strategy</div>
+                  <div className="insight-value">{investmentAdvice}</div>
                 </div>
               </div>
             </div>
@@ -216,35 +263,46 @@ const MarketDashboard = ({ apiBaseUrl }) => {
         );
       
       case '52week':
+        const nearHigh = week52?.near_high || [];
+        const nearLow = week52?.near_low || [];
+        
         return (
           <div className="tab-content">
             <div className="scanner-container">
               <div className="near-high">
                 <h3 className="section-title">📈 Near 52W High</h3>
                 <div className="scanner-list">
-                  {week52.near_high.map((stock) => (
-                    <div key={stock.symbol} className="scanner-card">
-                      <div className="scanner-symbol">{stock.symbol.replace('.NS', '')}</div>
-                      <div className="scanner-details">
-                        <span className="scanner-price">₹{stock.price.toLocaleString()}</span>
-                        <span className="scanner-pct">{stock.pct_of_high.toFixed(1)}% of high</span>
+                  {nearHigh.length > 0 ? (
+                    nearHigh.map((stock) => (
+                      <div key={stock.symbol} className="scanner-card">
+                        <div className="scanner-symbol">{stock.symbol.replace('.NS', '').replace('.BO', '')}</div>
+                        <div className="scanner-details">
+                          <span className="scanner-price">₹{stock.price.toLocaleString()}</span>
+                          <span className="scanner-pct">{stock.pct_of_high.toFixed(1)}% of high</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="no-data">No stocks currently near 52-week high</div>
+                  )}
                 </div>
               </div>
               <div className="near-low">
                 <h3 className="section-title">📉 Near 52W Low</h3>
                 <div className="scanner-list">
-                  {week52.near_low.map((stock) => (
-                    <div key={stock.symbol} className="scanner-card">
-                      <div className="scanner-symbol">{stock.symbol.replace('.NS', '')}</div>
-                      <div className="scanner-details">
-                        <span className="scanner-price">₹{stock.price.toLocaleString()}</span>
-                        <span className="scanner-pct">{stock.pct_of_low.toFixed(1)}% of low</span>
+                  {nearLow.length > 0 ? (
+                    nearLow.map((stock) => (
+                      <div key={stock.symbol} className="scanner-card">
+                        <div className="scanner-symbol">{stock.symbol.replace('.NS', '').replace('.BO', '')}</div>
+                        <div className="scanner-details">
+                          <span className="scanner-price">₹{stock.price.toLocaleString()}</span>
+                          <span className="scanner-pct">{stock.pct_of_low.toFixed(1)}% of low</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="no-data">No stocks currently near 52-week low</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -384,10 +442,6 @@ const MarketDashboard = ({ apiBaseUrl }) => {
 
   return (
     <div className="market-dashboard">
-      <div className="dashboard-header">
-        <p className="dashboard-description">Comprehensive market overview with real-time data across global indices, top movers, sector performance, and key investment metrics</p>
-      </div>
-
       <div className="tab-navigation">
         {tabs.map(tab => (
           <button

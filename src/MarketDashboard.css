@@ -11,23 +11,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #2a2e39;
-}
-
-.dashboard-description {
-  color: #787b86;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 /* Tab Navigation */
 .tab-navigation {
   display: flex;
@@ -351,48 +334,120 @@
   padding: 30px;
 }
 
-.sentiment-gauge {
-  margin-bottom: 24px;
+.sentiment-header {
+  margin-bottom: 30px;
 }
 
-.gauge-background {
-  height: 24px;
+.sentiment-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
   background: #131722;
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #2a2e39;
+}
+
+.sentiment-icon {
+  font-size: 3.5rem;
+}
+
+.sentiment-score-large {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #d1d4dc;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.sentiment-level-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sentiment-gauge {
+  margin-top: 20px;
+}
+
+.gauge-track {
+  height: 16px;
+  background: #131722;
+  border-radius: 8px;
   position: relative;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #2a2e39;
+  overflow: visible;
 }
 
 .gauge-fill {
   height: 100%;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.5s ease;
+  position: relative;
 }
 
-.sentiment-labels {
+.gauge-marker {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 24px;
+  background: #fff;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.gauge-labels {
   display: flex;
   justify-content: space-between;
   font-size: 0.7rem;
   color: #787b86;
   font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
 }
 
-.sentiment-info {
-  text-align: center;
+.gauge-labels span {
+  flex: 1;
+}
+
+.sentiment-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
   margin-top: 20px;
 }
 
-.sentiment-score {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #d1d4dc;
+.insight-card {
+  background: #131722;
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  padding: 16px;
 }
 
-.sentiment-level {
-  font-size: 1.3rem;
+.insight-label {
+  font-size: 0.75rem;
+  color: #787b86;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
   font-weight: 600;
+}
+
+.insight-value {
+  color: #d1d4dc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.no-data {
+  text-align: center;
+  padding: 30px;
+  color: #787b86;
+  font-style: italic;
 }
 
 /* 52-Week Scanner */
