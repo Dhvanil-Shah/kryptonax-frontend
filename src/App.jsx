@@ -500,9 +500,9 @@ function App() {
     // Re-fetch trending when moverRegion changes and poll periodically
     useEffect(() => {
         let id = null;
-        fetchTrending(moverRegion);
+        fetchTrending([moverRegion]);
         try {
-            id = setInterval(() => fetchTrending(moverRegion), 15000); // refresh every 15s
+            id = setInterval(() => fetchTrending([moverRegion]), 15000); // refresh every 15s
         } catch (e) { }
         return () => { if (id) clearInterval(id); };
     }, [moverRegion]);
