@@ -302,8 +302,15 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
         )}
       </div>
 
-      {/* Quality Score Section - Separate from tabs */}
-      <div style={{ marginTop: '30px' }}>
+      {/* Quality Score Section - Completely Separate Block */}
+      <div style={{ 
+        marginTop: '50px',
+        padding: '30px',
+        backgroundColor: '#1e222d',
+        borderRadius: '15px',
+        border: '2px solid #2962ff',
+        boxShadow: '0 4px 20px rgba(41, 98, 255, 0.2)'
+      }}>
         <QualityScore ticker={ticker} apiBaseUrl={apiBaseUrl} />
       </div>
     </div>
