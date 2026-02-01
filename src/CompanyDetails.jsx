@@ -23,34 +23,45 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           fetch(`${apiBaseUrl}/compendium/${ticker}`)
         ]);
 
-        if (historyRes.ok) {
+        // Always try to parse the data, even if status is not "ok"
+        let successCount = 0;
+
+        try {
           const historyData = await historyRes.json();
           setCompanyHistory(historyData);
-        } else {
+          successCount++;
+        } catch (e) {
+          console.log(`Failed to parse company history for ${ticker}`);
           setCompanyHistory(null);
-          console.log(`Company history not available for ${ticker}:`, historyRes.status);
         }
 
-        if (boardRes.ok) {
+        try {
           const boardData = await boardRes.json();
           setBoardMembers(boardData);
-        } else {
+          successCount++;
+        } catch (e) {
+          console.log(`Failed to parse board members for ${ticker}`);
           setBoardMembers(null);
-          console.log(`Board members not available for ${ticker}:`, boardRes.status);
         }
 
-        if (compendiumRes.ok) {
+        try {
           const compendiumData = await compendiumRes.json();
           setCompendium(compendiumData);
-        } else {
+          successCount++;
+        } catch (e) {
+          console.log(`Failed to parse compendium for ${ticker}`);
           setCompendium(null);
-          console.log(`Compendium not available for ${ticker}:`, compendiumRes.status);
+        }
+
+        // Only set error if ALL requests failed
+        if (successCount === 0) {
+          setError("Unable to load company data. Please try again later.");
         }
 
         setLoading(false);
       } catch (err) {
         console.error('Error fetching company details:', err);
-        setError(err.message);
+        setError("Network error. Please check your connection and try again.");
         setLoading(false);
       }
     };
@@ -283,9 +294,9 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
           </div>
         )}
 
-        {error && (
+        {error && !companyHistory && !boardMembers && !compendium && (
           <div className="error-message">
-            Error loading company details: {error}
+            {error}
           </div>
         )}
       </div>
