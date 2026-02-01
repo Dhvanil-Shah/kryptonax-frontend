@@ -1482,7 +1482,7 @@ const toggleNotification = async (t) => {
 
                 {/* Live Stock Ticker Tape */}
                 <TickerTape 
-                    region={region} 
+                    region={selectedRegions.includes('INDIA') ? 'INDIA' : selectedRegions.includes('USA') ? 'USA' : 'INDIA'} 
                     onStockClick={(symbol) => {
                         setTicker(symbol);
                         setSearchedTicker(symbol);
