@@ -82,7 +82,8 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
       </div>
 
       <div className="company-details-content">
-        {activeTab === 'history' && companyHistory && (
+        {activeTab === 'history' && (
+          companyHistory ? (
           <div className="history-section">
             <h2>{companyHistory.company_name}</h2>
             <div className="history-grid">
@@ -124,9 +125,19 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
               <p>{companyHistory.description}</p>
             </div>
           </div>
+          ) : (
+            <div className="no-data-message">
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#787b86' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>🏢</div>
+                <h3 style={{ color: '#d1d4dc', marginBottom: '10px' }}>Company History Not Available</h3>
+                <p>No company history data available for {ticker}. This information may not be available for this ticker.</p>
+              </div>
+            </div>
+          )
         )}
 
-        {activeTab === 'board' && boardMembers && (
+        {activeTab === 'board' && (
+          boardMembers ? (
           <div className="board-section">
             <h2>Board Members & Leadership</h2>
             <p className="board-count">{boardMembers.board_size} members</p>
@@ -174,9 +185,19 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
               </div>
             )}
           </div>
+          ) : (
+            <div className="no-data-message">
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#787b86' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>👥</div>
+                <h3 style={{ color: '#d1d4dc', marginBottom: '10px' }}>Board Members Not Available</h3>
+                <p>No board member data available for {ticker}. This information may not be available for this ticker.</p>
+              </div>
+            </div>
+          )
         )}
 
-        {activeTab === 'compendium' && compendium && (
+        {activeTab === 'compendium' && (
+          compendium ? (
           <div className="compendium-section">
             <h2>Financial Compendium & Reports</h2>
             <div className="compendium-tabs">
@@ -224,6 +245,15 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
               ))}
             </div>
           </div>
+          ) : (
+            <div className="no-data-message">
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#787b86' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>📊</div>
+                <h3 style={{ color: '#d1d4dc', marginBottom: '10px' }}>Compendium Not Available</h3>
+                <p>No financial reports available for {ticker}. This information may not be available for this ticker.</p>
+              </div>
+            </div>
+          )
         )}
 
         {selectedReport && (
