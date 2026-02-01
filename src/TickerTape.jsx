@@ -26,7 +26,21 @@ const TickerTape = ({ region, onStockClick }) => {
     ]
   };
 
-  const symbols = stockSymbols[region] || stockSymbols.INDIA;
+  // Get symbols based on region - mix both for MIXED region
+  let symbols;
+  if (region === 'MIXED') {
+    // Interleave Indian and US stocks for variety
+    const india = stockSymbols.INDIA;
+    const usa = stockSymbols.USA;
+    symbols = [];
+    const maxLength = Math.max(india.length, usa.length);
+    for (let i = 0; i < maxLength; i++) {
+      if (i < india.length) symbols.push(india[i]);
+      if (i < usa.length) symbols.push(usa[i]);
+    }
+  } else {
+    symbols = stockSymbols[region] || stockSymbols.INDIA;
+  }
 
   useEffect(() => {
     fetchStockData();
