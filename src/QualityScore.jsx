@@ -57,16 +57,17 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
 
   const { overall_score, grade, verdict, risks, target, current_price, details } = qualityData;
 
-  // Detect currency based on ticker
-  const getCurrency = (tickerSymbol) => {
-    if (tickerSymbol.endsWith('.NS') || tickerSymbol.endsWith('.BO')) return '₹'; // Indian stocks
-    if (tickerSymbol.endsWith('.L')) return '£'; // London
-    if (tickerSymbol.endsWith('.T')) return '¥'; // Tokyo
-    if (tickerSymbol.endsWith('.HK')) return 'HK$'; // Hong Kong
+  // Detect currency based on ticker (use the prop, not from API response)
+  const getCurrency = () => {
+    if (!ticker) return '$';
+    if (ticker.endsWith('.NS') || ticker.endsWith('.BO')) return '₹'; // Indian stocks
+    if (ticker.endsWith('.L')) return '£'; // London
+    if (ticker.endsWith('.T')) return '¥'; // Tokyo
+    if (ticker.endsWith('.HK')) return 'HK$'; // Hong Kong
     return '$'; // Default USD
   };
   
-  const currencySymbol = getCurrency(ticker || qualityData.ticker || '');
+  const currencySymbol = getCurrency();
 
   // Determine color based on score
   const getScoreColor = (score) => {
@@ -265,26 +266,6 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
             ❌ Look for better alternatives with stronger fundamentals for long-term wealth creation.
           </p>
         )}
-      </div>
-
-      {/* Legal Disclaimer */}
-      <div style={{
-        marginTop: '30px',
-        padding: '20px',
-        backgroundColor: 'rgba(255, 152, 0, 0.1)',
-        borderLeft: '4px solid #ff9800',
-        borderRadius: '8px'
-      }}>
-        <h4 style={{ color: '#ff9800', fontSize: '16px', marginBottom: '10px' }}>⚠️ Important Disclaimer</h4>
-        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#d1d4dc', marginBottom: '8px' }}>
-          <strong>Educational Purpose Only:</strong> This quality score is an algorithmic analysis for educational purposes and is NOT professional financial advice.
-        </p>
-        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#d1d4dc', marginBottom: '8px' }}>
-          <strong>Data Source:</strong> Stock data sourced from Yahoo Finance (free public API). Data may be delayed by 15-20 minutes and accuracy is not guaranteed.
-        </p>
-        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#d1d4dc', marginBottom: '0' }}>
-          <strong>Investment Risk:</strong> Always consult licensed financial advisors before making investment decisions. Past performance does not indicate future results. Investing involves risk of loss.
-        </p>
       </div>
     </div>
   );
