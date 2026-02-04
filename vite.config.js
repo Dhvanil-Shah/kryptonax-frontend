@@ -4,4 +4,29 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Optimize bundle size
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'recharts': ['recharts'],
+          'vendor': ['react', 'react-dom'],
+        }
+      }
+    },
+    // Enable minification
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.logs in production
+        drop_debugger: true
+      }
+    },
+    // Reduce chunk size warnings
+    chunkSizeWarningLimit: 1000
+  },
+  // Enable compression
+  server: {
+    compress: true
+  }
 })
