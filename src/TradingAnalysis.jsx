@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './TradingAnalysis.css';
 import QualityScore from './QualityScore';
 
@@ -7,6 +7,8 @@ const TradingAnalysis = ({ ticker, apiBaseUrl }) => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const cache = useRef({});
+  const abortControllerRef = useRef(null);
 
   const tradingTypes = [
     { 
@@ -55,30 +57,57 @@ const TradingAnalysis = ({ ticker, apiBaseUrl }) => {
 
   useEffect(() => {
     fetchAnalysis(activeType);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [ticker, activeType]);
 
-  const fetchAnalysis = async (type) => {
+  const fetchAnalysis = useCallback(async (type) => {
+    // Check cache first
+    const cacheKey = `${ticker}-${type}`;
+    if (cache.current[cacheKey]) {
+      setAnalysisData(cache.current[cacheKey]);
+      setError(null);
+      return;
+    }
+
     try {
+      // Abort previous request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      abortControllerRef.current = new AbortController();
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${apiBaseUrl}/trading-analysis/${ticker}/${type}`);
+      const response = await fetch(
+        `${apiBaseUrl}/trading-analysis/${ticker}/${type}`,
+        { 
+          signal: abortControllerRef.current.signal,
+          headers: { 'Cache-Control': 'max-age=300' }
+        }
+      );
       
       if (response.ok) {
         const data = await response.json();
+        cache.current[cacheKey] = data; // Cache the result
         setAnalysisData(data);
+        setError(null);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setError(errorData.detail || "Analysis not available");
+        setError(errorData.detail || "Analysis temporarily unavailable. Please try again.");
       }
-
-      setLoading(false);
     } catch (err) {
+      if (err.name === 'AbortError') return; // Ignore abort errors
       console.error('Error fetching trading analysis:', err);
-      setError("Unable to load analysis");
+      setError("Unable to load analysis. Please check your connection.");
+    } finally {
       setLoading(false);
     }
-  };
+  }, [ticker, apiBaseUrl]);
 
   const getActionColor = (action) => {
     if (!action) return '#787b86';
@@ -104,7 +133,11 @@ const TradingAnalysis = ({ ticker, apiBaseUrl }) => {
     if (loading) {
       return (
         <div className="analysis-loading">
-          <div className="spinner"></div>
+          <div className="loading-bars">
+            <div className="bar"></div>
+            <div className="bar"></div>
+            <div className="bar"></div>
+          </div>
           <p>Analyzing {tradingTypes.find(t => t.id === activeType)?.label}...</p>
         </div>
       );
@@ -113,8 +146,17 @@ const TradingAnalysis = ({ ticker, apiBaseUrl }) => {
     if (error || !analysisData) {
       return (
         <div className="analysis-error">
-          <span className="error-icon">⚠️</span>
-          <p>{error}</p>
+          <div className="error-icon">⚠️</div>
+          <p>{error || "Unable to fetch stock data"}</p>
+          <button 
+            className="retry-btn"
+            onClick={() => {
+              cache.current = {}; // Clear cache
+              fetchAnalysis(activeType);
+            }}
+          >
+            🔄 Retry
+          </button>
         </div>
       );
     }
