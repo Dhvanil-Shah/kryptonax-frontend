@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './CompanyDetails.css';
 import QualityScore from './QualityScore';
+import TradingAnalysis from './TradingAnalysis';
 
 const CompanyDetails = ({ ticker, apiBaseUrl }) => {
   const [activeTab, setActiveTab] = useState('history');
@@ -302,7 +303,7 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
         )}
       </div>
 
-      {/* Quality Score Section - Completely Separate Block */}
+      {/* Trading Analysis Section - After Company Details */}
       <div style={{ 
         marginTop: '50px',
         padding: '30px',
@@ -311,7 +312,7 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
         border: '2px solid #2962ff',
         boxShadow: '0 4px 20px rgba(41, 98, 255, 0.2)'
       }}>
-        <QualityScore ticker={ticker} apiBaseUrl={apiBaseUrl} />
+        <TradingAnalysis ticker={ticker} apiBaseUrl={apiBaseUrl} />
       </div>
     </div>
   );

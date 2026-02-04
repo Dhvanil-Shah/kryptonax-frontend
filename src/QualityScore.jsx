@@ -1,10 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import './QualityScore.css';
 
-const QualityScore = ({ ticker, apiBaseUrl }) => {
+const QualityScore = ({ ticker, apiBaseUrl, tradingType = null }) => {
   const [qualityData, setQualityData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Get display title based on trading type
+  const getTitle = () => {
+    if (!tradingType || tradingType === 'equity_longterm') {
+      return '🎯 Long-Term Quality Score';
+    }
+    const titles = {
+      'intraday': '⚡ Intraday Quality Score',
+      'swing': '🔄 Swing Trading Quality Score',
+      'positional': '📊 Positional Quality Score',
+      'scalping': '💨 Scalping Quality Score',
+      'options': '🎯 Options Quality Score'
+    };
+    return titles[tradingType] || '🎯 Quality Score';
+  };
+
+  const getSubtitle = () => {
+    if (!tradingType || tradingType === 'equity_longterm') {
+      return 'Buy & Forget Analysis';
+    }
+    const subtitles = {
+      'intraday': 'Same-Day Technical Analysis',
+      'swing': 'Short-to-Medium Term Analysis',
+      'positional': 'Medium-Term Position Analysis',
+      'scalping': 'Ultra Short-Term Analysis',
+      'options': 'Options Strategy Analysis'
+    };
+    return subtitles[tradingType] || 'Trading Analysis';
+  };
 
   useEffect(() => {
     const fetchQualityScore = async () => {
@@ -42,7 +71,7 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
   if (loading) {
     return (
       <div className="quality-score-container">
-        <div className="loading-spinner">Analyzing long-term potential...</div>
+        <div className="loading-spinner">Analyzing {tradingType === 'equity_longterm' || !tradingType ? 'long-term potential' : 'trading quality'}...</div>
       </div>
     );
   }
@@ -86,8 +115,8 @@ const QualityScore = ({ ticker, apiBaseUrl }) => {
   return (
     <div className="quality-score-container">
       <div className="quality-header">
-        <h2>🎯 Long-Term Quality Score</h2>
-        <p className="subtitle">Buy & Forget Analysis for {qualityData.company_name}</p>
+        <h2>{getTitle()}</h2>
+        <p className="subtitle">{getSubtitle()} for {qualityData.company_name}</p>
       </div>
 
       {/* Overall Score Card */}
