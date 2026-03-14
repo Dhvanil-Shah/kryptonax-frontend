@@ -14,11 +14,49 @@ const MarketDashboard = ({ apiBaseUrl }) => {
   const [insider, setInsider] = useState([]);
   const [valuation, setValuation] = useState([]);
 
+  const [budgetData, setBudgetData] = useState(null);
+  const [budgetYears, setBudgetYears] = useState([]);
+  const [selectedBudgetYear, setSelectedBudgetYear] = useState('latest');
+  const [budgetLoading, setBudgetLoading] = useState(true);
+  const [budgetError, setBudgetError] = useState(null);
+
   useEffect(() => {
     fetchAllMarketData();
     const interval = setInterval(fetchAllMarketData, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchBudget = async () => {
+      setBudgetLoading(true);
+      setBudgetError(null);
+
+      try {
+        const [yearsRes, budgetRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/budget/years`),
+          fetch(`${apiBaseUrl}/budget/${selectedBudgetYear === 'latest' ? 'latest' : selectedBudgetYear}`)
+        ]);
+
+        const yearsData = await yearsRes.json();
+        const budgetInfo = await budgetRes.json();
+
+        setBudgetYears(Array.isArray(yearsData) ? yearsData : []);
+        setBudgetData(budgetInfo);
+
+        // If the API supports year list, default to most recent year once loaded
+        if (selectedBudgetYear === 'latest' && Array.isArray(yearsData) && yearsData.length > 0) {
+          setSelectedBudgetYear(yearsData[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching budget data:', error);
+        setBudgetError('Unable to load budget data');
+      } finally {
+        setBudgetLoading(false);
+      }
+    };
+
+    fetchBudget();
+  }, [apiBaseUrl, selectedBudgetYear]);
 
   const fetchAllMarketData = async () => {
     try {
@@ -83,7 +121,8 @@ const MarketDashboard = ({ apiBaseUrl }) => {
     { id: 'volume', label: 'Most Active Stocks', icon: '📊' },
     { id: 'calendar', label: 'Market Calendar', icon: '📅' },
     { id: 'insider', label: 'Insider Trading', icon: '👔' },
-    { id: 'valuation', label: 'Valuation Metrics', icon: '💹' }
+    { id: 'valuation', label: 'Valuation Metrics', icon: '💹' },
+    { id: 'budget', label: 'Budget Insights', icon: '💰' }
   ];
 
   if (loading) {
@@ -434,7 +473,115 @@ const MarketDashboard = ({ apiBaseUrl }) => {
             </div>
           </div>
         );
-      
+
+      case 'budget':
+        return (
+          <div className="tab-content">
+            <div className="budget-header">
+              <div>
+                <h3 className="section-title">Union Budget Insights</h3>
+                <p style={{ color: '#787b86', marginTop: '6px', fontSize: '13px' }}>
+                  Latest budget data pulled from official sources. Select a year to view details.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select
+                  value={selectedBudgetYear}
+                  onChange={(e) => setSelectedBudgetYear(e.target.value)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: '1px solid #2a2e39',
+                    backgroundColor: '#131722',
+                    color: 'white',
+                    cursor: 'pointer',
+                    minWidth: '180px'
+                  }}
+                >
+                  <option value="latest">Latest</option>
+                  {budgetYears.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                {budgetLoading && <span style={{ color: '#787b86' }}>Loading...</span>}
+              </div>
+            </div>
+
+            {budgetError && (
+              <div style={{ color: '#ff1744', marginTop: '20px' }}>{budgetError}</div>
+            )}
+
+            {!budgetLoading && budgetData && (
+              <>
+                <div className="budget-grid">
+                  <div className="budget-card">
+                    <div className="budget-card-title">Year</div>
+                    <div className="budget-card-value">{budgetData.year}</div>
+                  </div>
+                  <div className="budget-card">
+                    <div className="budget-card-title">Last Updated</div>
+                    <div className="budget-card-value">{budgetData.last_updated ? new Date(budgetData.last_updated).toLocaleString() : 'N/A'}</div>
+                  </div>
+                  <div className="budget-card">
+                    <div className="budget-card-title">Source</div>
+                    <div className="budget-card-value">{budgetData.source || 'Government of India'}</div>
+                  </div>
+                </div>
+
+                {budgetData.key_figures && Object.keys(budgetData.key_figures).length > 0 && (
+                  <div style={{ marginTop: '26px' }}>
+                    <h3 className="section-title">Key Figures</h3>
+                    <div className="budget-cards">
+                      {Object.entries(budgetData.key_figures).map(([key, value]) => (
+                        <div key={key} className="budget-card">
+                          <div className="budget-card-title">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                          <div className="budget-card-value">{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {budgetData.highlights && budgetData.highlights.length > 0 && (
+                  <div style={{ marginTop: '26px' }}>
+                    <h3 className="section-title">Highlights</h3>
+                    <ul className="budget-highlights">
+                      {budgetData.highlights.map((h, idx) => (
+                        <li key={idx}>{h}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {budgetData.sector_allocations && Object.keys(budgetData.sector_allocations).length > 0 && (
+                  <div style={{ marginTop: '26px' }}>
+                    <h3 className="section-title">Sector Allocations</h3>
+                    <div className="budget-cards">
+                      {Object.entries(budgetData.sector_allocations).map(([sector, amount]) => (
+                        <div key={sector} className="budget-card">
+                          <div className="budget-card-title">{sector}</div>
+                          <div className="budget-card-value">{amount}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {budgetData.tax_changes && budgetData.tax_changes.length > 0 && (
+                  <div style={{ marginTop: '26px' }}>
+                    <h3 className="section-title">Tax Changes</h3>
+                    <ul className="budget-highlights">
+                      {budgetData.tax_changes.map((t, idx) => (
+                        <li key={idx}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
