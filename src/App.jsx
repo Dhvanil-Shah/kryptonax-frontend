@@ -356,6 +356,49 @@ const SentimentGauge = ({ data, newsCounts }) => {
   );
 };
 
+const buildKryptonAdvisorReport = ({ ticker, interest, quote, model, news }) => {
+  if (!ticker || !quote) return null;
+
+  const positive = news.filter(item => item.sentiment === 'positive').length;
+  const negative = news.filter(item => item.sentiment === 'negative').length;
+  const sentimentTotal = positive + negative || 1;
+  const sentimentTone = positive >= negative ? 'positive' : 'cautionary';
+  const currentPrice = Number(quote.price || 0);
+  const changeString = quote.change >= 0 ? `+${quote.change}` : `${quote.change}`;
+  const guidanceMap = {
+    Growth: 'target fast-growing, high-momentum names with strong analyst sentiment and bullish catalysts.',
+    Dividend: 'focus on stable dividend payers with consistent cash flow and attractive yield.',
+    Value: 'look for undervalued companies trading below intrinsic value with solid fundamentals.',
+    Momentum: 'track names with strong recent price momentum and accelerating volume.',
+    ESG: 'prioritize companies with strong sustainability, governance, and impact narratives.',
+    'Long-term': 'build a portfolio around durable businesses with long-term growth and resilience.'
+  };
+
+  const interestGuidance = guidanceMap[interest] || guidanceMap.Growth;
+  const trendText = model?.trend || 'Sideways';
+  const confidenceText = model?.confidence || 'Moderate';
+  const predictedTarget = model?.prediction15d ? Number(model.prediction15d).toFixed(2) : null;
+
+  const recommendation = `Krypton Advisor suggests a ${interest.toLowerCase()} view on ${ticker} based on ${sentimentTone} news flow and ${trendText.toLowerCase()} technicals.`;
+  const nextStep = `Monitor ${ticker} around ${quote.price ? quote.price : 'current price'} and consider ${interestGuidance}`;
+
+  return {
+    headline: `Krypton Advisor Report for ${ticker}`,
+    summary: `Built for your ${interest.toLowerCase()} interest, this report combines price action, news sentiment, and predictive momentum into advice you can act on today.`,
+    details: [
+      `Selected focus: ${interest}`,
+      `Sentiment: ${positive} positive / ${negative} negative`,
+      `Market trend: ${trendText}`,
+      `Confidence: ${confidenceText}`,
+      `Price: ${quote.currency || ''} ${currentPrice.toFixed(2)} (${changeString}%)`,
+      predictedTarget ? `15-day implied target: ${predictedTarget}` : null
+    ].filter(Boolean),
+    recommendation,
+    nextStep,
+    interestGuidance
+  };
+};
+
 function App() {
   useEffect(() => { ReactGA.send({ hitType: "pageview", page: window.location.pathname }); }, []);
 
@@ -423,6 +466,8 @@ function App() {
   const [newsReaderRegions, setNewsReaderRegions] = useState(['all']);
   const [newsReaderStates, setNewsReaderStates] = useState({});
   const [showKryptonIBeta, setShowKryptonIBeta] = useState(false);
+  const [kryptonInterest, setKryptonInterest] = useState("Growth");
+  const [advisorReport, setAdvisorReport] = useState(null);
   const betaRef = useRef(null);
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
@@ -694,8 +739,15 @@ const toggleNotification = async (t) => {
   const fetchQuote = async (symbol) => { 
       try { 
           const res = await fetch(`${API_BASE_URL}/quote/${symbol}`); 
-          if(res.ok) setCurrentQuote(await res.json()); 
-      } catch (e) {} 
+          if (res.ok) {
+              const data = await res.json();
+              setCurrentQuote(data);
+              return data;
+          }
+      } catch (e) {
+          console.error('fetchQuote failed', e);
+      }
+      return null;
   };
 
   const fetchHistoryData = async (symbol, range) => { 
@@ -726,9 +778,21 @@ const toggleNotification = async (t) => {
       const prediction = generateUniquePrediction(finalData, mainSym);
       setPredictiveData(prediction.data);
       setPredictionModel(prediction.model);
+      return prediction.model;
   };
 
   const onSearchFocus = () => { setShowSuggestions(true); if (searchHistory.length > 0) fetchBatchQuotes(searchHistory); };
+  
+  useEffect(() => {
+    if (!searchedTicker || !currentQuote) return;
+    setAdvisorReport(buildKryptonAdvisorReport({
+      ticker: searchedTicker,
+      interest: kryptonInterest,
+      quote: currentQuote,
+      model: predictionModel,
+      news
+    }));
+  }, [searchedTicker, kryptonInterest, currentQuote, predictionModel, news]);
   
   const fetchSuggestions = async (query, isFav = false) => { 
       if (query.length < 2) { 
@@ -1709,6 +1773,17 @@ const toggleNotification = async (t) => {
                     <p style={{ margin: 0, color: '#cfd8fc', fontSize: '16px', maxWidth: '860px', lineHeight: '1.8' }}>
                       Krypton I is the next-generation investor intelligence experience for Kryptonax. It combines smart market signals, pitch-ready insights, and AI-assisted idea discovery in one beta preview.
                     </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ color: '#b8c7ff', fontWeight: '600' }}>Advisor Focus:</span>
+                      <select value={kryptonInterest} onChange={(e) => setKryptonInterest(e.target.value)} style={{ padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.18)', backgroundColor: '#0f1726', color: '#fff', cursor: 'pointer', minWidth: '180px' }}>
+                        <option value="Growth">Growth</option>
+                        <option value="Dividend">Dividend</option>
+                        <option value="Value">Value</option>
+                        <option value="Momentum">Momentum</option>
+                        <option value="ESG">ESG</option>
+                        <option value="Long-term">Long-term</option>
+                      </select>
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
                       {[
                         { title: 'AI Signal Engine', desc: 'Smart bullish and bearish signals based on sentiment, momentum, and chart patterns.' },
