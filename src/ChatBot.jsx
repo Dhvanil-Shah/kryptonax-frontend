@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null, interest = null }) => {
-  const initialMessage = `👋 Hi! I'm your Kryptonax AI Assistant. I can help you discuss company news, board members, market trends, and financial insights. ${ticker ? `I see you're interested in ${ticker}.` : "What would you like to know?"} ${interest ? `I'm ready to help with your ${interest} investment focus.` : "Tell me what kind of financial advice you need."}`;
+const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null, interest = null, token = null, favorites = [], userName = '' }) => {
+  const watchlistText = favorites && favorites.length > 0 ? ` You have saved favorites: ${favorites.slice(0, 3).map(f => f.ticker).join(', ')}${favorites.length > 3 ? ', ...' : ''}.` : '';
+  const loginText = token ? ' I can provide personalized guidance for your saved watchlist and current market trends.' : ' Log in to unlock personalized watchlist and trend-based advisor analysis.';
+  const initialMessage = `👋 Hi${userName ? ` ${userName}` : ''}! I'm your Kryptonax AI Assistant. I can help you discuss company news, market trends, and investment insights.${ticker ? ` I see you're interested in ${ticker}.` : ' What would you like to review?'}${interest ? ` I'm ready to help with your ${interest} investment focus.` : ''}${watchlistText}${loginText}`;
   const [messages, setMessages] = useState([
     {
       role: 'bot',
@@ -43,11 +45,15 @@ const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null, interest = null }
         message: msg.message
       }));
 
+      const headers = {
+          'Content-Type': 'application/json',
+      };
+      if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`${apiBaseUrl}/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           user_message: input,
           ticker: ticker,

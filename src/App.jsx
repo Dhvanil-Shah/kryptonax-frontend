@@ -830,6 +830,11 @@ const toggleNotification = async (t) => {
       } catch (e) {} 
   };
 
+  const getDefaultAdvisorTicker = () => {
+      if (token && favorites.length > 0) return favorites[0].ticker;
+      return 'AAPL';
+  };
+
   const toggleFavorite = async (t) => { 
       if (!token) { setShowAuthModal(true); return; } 
       if (!t) return; 
@@ -1010,22 +1015,22 @@ const toggleNotification = async (t) => {
             <div style={{ padding: '32px 32px 24px', background: 'linear-gradient(135deg, #0d1a34, #142340)', borderBottom: '1px solid rgba(79,172,254,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                 <div>
-                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: '#00b4db', textTransform: 'uppercase', fontWeight: '700', marginBottom: '10px' }}>Krypton I Beta</div>
-                  <h2 style={{ margin: 0, fontSize: '28px', color: '#ffffff' }}>Investor Intelligence for your pitch</h2>
+                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: '#00b4db', textTransform: 'uppercase', fontWeight: '700', marginBottom: '10px' }}>Krypton Advisor</div>
+                  <h2 style={{ margin: 0, fontSize: '28px', color: '#ffffff' }}>Personalized watchlist intelligence</h2>
                 </div>
                 <button onClick={() => setShowKryptonIBeta(false)} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>✕</button>
               </div>
             </div>
             <div style={{ padding: '30px 32px', color: '#d1d4dc' }}>
               <p style={{ margin: '0 0 20px', lineHeight: '1.8', color: '#b8c7ff' }}>
-                Krypton I is a preview of a new AI-powered investor intelligence layer inside Kryptonax. It helps you turn market data into pitch-ready stories, sector themes, and smart investment ideas.
+                Krypton Advisor is built to convert your saved favorites and real-time market data into a disciplined advisory view. It focuses on watchlist trends, sentiment signals, and practical next steps for investors.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                 {[
-                  { label: 'Pitch Summary', value: 'One-click investor briefs for any ticker' },
-                  { label: 'Opportunity Radar', value: 'Highlight top sector and momentum themes' },
-                  { label: 'AI Score', value: 'Signal strength based on news, technicals, and sentiment' },
-                  { label: 'Action Plan', value: 'Suggested next steps for watchlists and trade ideas' }
+                  { label: 'Executive Summary', value: 'A concise recommendation and risk view for your market exposure.' },
+                  { label: 'Market Themes', value: 'Identify the top sector and trend drivers shaping your watchlist.' },
+                  { label: 'Signal Confidence', value: 'Clear sentiment, momentum, and technical context for each idea.' },
+                  { label: 'Action Roadmap', value: 'Concrete next steps tied to your advisor focus and saved stocks.' }
                 ].map((item, idx) => (
                   <div key={idx} style={{ background: '#0f1726', border: '1px solid rgba(79,172,254,0.15)', borderRadius: '16px', padding: '18px' }}>
                     <div style={{ color: '#4fc3f7', fontWeight: '700', marginBottom: '8px' }}>{item.label}</div>
@@ -1033,8 +1038,8 @@ const toggleNotification = async (t) => {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setShowKryptonIBeta(false); setTicker('AAPL'); handleSearch('AAPL'); }} style={{ padding: '14px 24px', background: '#2962ff', color: '#fff', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}>
-                Try Krypton I with AAPL
+              <button onClick={() => { setShowKryptonIBeta(false); handleSearch(getDefaultAdvisorTicker()); }} style={{ padding: '14px 24px', background: '#2962ff', color: '#fff', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}>
+                {token && favorites.length > 0 ? 'Analyze My Watchlist' : 'Start with AAPL Demo'}
               </button>
             </div>
           </div>
@@ -1767,8 +1772,8 @@ const toggleNotification = async (t) => {
                 <div ref={betaRef} style={{ margin: '30px 0', padding: '30px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(41,98,255,0.15), rgba(9,19,38,1))', border: '1px solid rgba(41,98,255,0.25)', boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1040px', margin: '0 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '14px', color: '#00b4db', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>New Beta</span>
-                      <h2 style={{ margin: 0, color: '#ffffff', fontSize: '32px' }}>Krypton I Beta</h2>
+                      <span style={{ fontSize: '14px', color: '#00b4db', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>New Advisor</span>
+                      <h2 style={{ margin: 0, color: '#ffffff', fontSize: '32px' }}>Krypton Advisor</h2>
                     </div>
                     <p style={{ margin: 0, color: '#cfd8fc', fontSize: '16px', maxWidth: '860px', lineHeight: '1.8' }}>
                       Krypton I is the next-generation investor intelligence experience for Kryptonax. It combines smart market signals, pitch-ready insights, and AI-assisted idea discovery in one beta preview.
@@ -1784,11 +1789,14 @@ const toggleNotification = async (t) => {
                         <option value="Long-term">Long-term</option>
                       </select>
                     </div>
+                    <p style={{ margin: 0, color: '#cfd8fc', fontSize: '16px', maxWidth: '860px', lineHeight: '1.8' }}>
+                      {token && favorites.length > 0 ? 'Krypton Advisor delivers a watchlist-aligned analysis built from your saved favorites and current market signals.' : 'Krypton Advisor is designed to turn market data into disciplined investment guidance with a professional view on trend, sentiment, and risk.'}
+                    </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
                       {[
-                        { title: 'AI Signal Engine', desc: 'Smart bullish and bearish signals based on sentiment, momentum, and chart patterns.' },
-                        { title: 'Pitch-Ready Insights', desc: 'Instant summaries and investor-friendly talking points for any stock.' },
-                        { title: 'Portfolio Ideas', desc: 'Curated market themes and watchlist-ready opportunities for the next move.' }
+                        { title: 'Market Signal Engine', desc: 'Professional market signals with sentiment, momentum, and trend validation.' },
+                        { title: 'Strategic Intelligence', desc: 'Actionable executive summaries, risk guidance, and scenario-based next steps.' },
+                        { title: 'Watchlist Insights', desc: 'Personalized guidance based on your saved stocks and prevailing market themes.' }
                       ].map((item, idx) => (
                         <div key={idx} style={{ background: '#111827', border: '1px solid rgba(79, 172, 254, 0.18)', borderRadius: '16px', padding: '22px', minHeight: '140px' }}>
                           <h4 style={{ color: '#4FC3F7', marginBottom: '10px', fontSize: '18px' }}>{item.title}</h4>
@@ -1797,8 +1805,10 @@ const toggleNotification = async (t) => {
                       ))}
                     </div>
                     <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                      <button onClick={() => setShowKryptonIBeta(true)} style={{ padding: '14px 26px', background: '#2962ff', color: '#ffffff', border: 'none', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>Explore Krypton I Beta</button>
-                      <button onClick={() => setTicker('AAPL') || handleSearch('AAPL')} style={{ padding: '14px 26px', background: 'rgba(255,255,255,0.08)', color: '#d1d4dc', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>Demo with AAPL</button>
+                      <button onClick={() => setShowKryptonIBeta(true)} style={{ padding: '14px 26px', background: '#2962ff', color: '#ffffff', border: 'none', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>Open Krypton Advisor</button>
+                      <button onClick={() => handleSearch(getDefaultAdvisorTicker())} style={{ padding: '14px 26px', background: 'rgba(255,255,255,0.08)', color: '#d1d4dc', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>
+                        {token && favorites.length > 0 ? 'Analyze My Watchlist' : 'Start with AAPL Demo'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2198,6 +2208,9 @@ const toggleNotification = async (t) => {
         apiBaseUrl={API_BASE_URL}
         ticker={searchedTicker}
         interest={kryptonInterest}
+        token={token}
+        favorites={favorites}
+        userName={userName}
       />
 
       {/* --- NEWS READER MODAL --- */}
