@@ -282,14 +282,19 @@ const CompanyDetails = ({ ticker, apiBaseUrl }) => {
                     ? "Annual general meeting report including proxy statement, shareholder resolutions, board elections, and executive compensation details."
                     : "Financial report and analysis for the selected period."}
                 </p>
-                {selectedReport.available && selectedReport.url ? (
+                {selectedReport.url ? (
                   <a href={selectedReport.url} target="_blank" rel="noopener noreferrer" className="download-btn">
                     📥 Open Report ({selectedReport.source})
                   </a>
                 ) : (
-                  <button className="download-btn" disabled>
-                    📥 Download Report (Coming Soon)
-                  </button>
+                  <>
+                    <a href={`https://finance.yahoo.com/quote/${ticker}/profile`} target="_blank" rel="noopener noreferrer" className="download-btn">
+                      📥 Open Investor Relations
+                    </a>
+                    <p style={{ color: '#a1a1a1', marginTop: '1rem', fontSize: '0.92rem' }}>
+                      Exact report link not found. You can still visit the investor relations page for {ticker}.
+                    </p>
+                  </>
                 )}
               </div>
             </div>
