@@ -474,7 +474,9 @@ const MarketDashboard = ({ apiBaseUrl }) => {
           </div>
         );
 
-      case 'budget':
+      case 'budget': {
+        const activeYear = selectedBudgetYear === 'latest' ? 'latest' : selectedBudgetYear;
+
         return (
           <div className="tab-content">
             <div className="budget-header">
@@ -511,76 +513,161 @@ const MarketDashboard = ({ apiBaseUrl }) => {
               <div style={{ color: '#ff1744', marginTop: '20px' }}>{budgetError}</div>
             )}
 
-            {!budgetLoading && budgetData && (
-              <>
-                <div className="budget-grid">
-                  <div className="budget-card">
-                    <div className="budget-card-title">Year</div>
-                    <div className="budget-card-value">{budgetData.year}</div>
-                  </div>
-                  <div className="budget-card">
-                    <div className="budget-card-title">Last Updated</div>
-                    <div className="budget-card-value">{budgetData.last_updated ? new Date(budgetData.last_updated).toLocaleString() : 'N/A'}</div>
-                  </div>
-                  <div className="budget-card">
-                    <div className="budget-card-title">Source</div>
-                    <div className="budget-card-value">{budgetData.source || 'Government of India'}</div>
-                  </div>
-                </div>
+            {(!budgetLoading && budgetData) && (() => {
+              const fallback = {
+                year: new Date().getFullYear().toString(),
+                last_updated: new Date().toISOString(),
+                source: 'Ministry of Finance, Government of India',
+                key_figures: {
+                  total_budget: '₹45 lakh crore (approx)',
+                  revenue_deficit: '₹3.5 lakh crore (approx)',
+                  capital_expenditure: '₹10 lakh crore (approx)',
+                  fiscal_deficit_target: '4.5% of GDP'
+                },
+                highlights: [
+                  'Budget data currently unavailable; showing sample data.',
+                  'Focus on infrastructure and digital transformation.',
+                  'Fiscal discipline with growth-oriented spending.',
+                  'Increased allocation for health and education.',
+                  'Emphasis on sustainable development and green growth.'
+                ],
+                sector_allocations: {
+                  Defence: '₹6.21 lakh crore',
+                  Railways: '₹2.41 lakh crore',
+                  'Roads & Highways': '₹2.70 lakh crore',
+                  Education: '₹1.12 lakh crore',
+                  Health: '₹89,155 crore',
+                  Agriculture: '₹1.52 lakh crore'
+                },
+                tax_changes: [
+                  'Corporate tax rate maintained at 22% for eligible companies.',
+                  'Income tax slabs remain unchanged.',
+                  'GST compliance focus continues.',
+                  'New incentives for digital transactions.'
+                ],
+                error: budgetData.error
+              };
 
-                {budgetData.key_figures && Object.keys(budgetData.key_figures).length > 0 && (
-                  <div style={{ marginTop: '26px' }}>
-                    <h3 className="section-title">Key Figures</h3>
-                    <div className="budget-cards">
-                      {Object.entries(budgetData.key_figures).map(([key, value]) => (
-                        <div key={key} className="budget-card">
-                          <div className="budget-card-title">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
-                          <div className="budget-card-value">{value}</div>
-                        </div>
-                      ))}
+              const display = budgetData.error ? fallback : budgetData;
+
+              return (
+                <>
+                  {display.error && (
+                    <div style={{ color: '#ff1744', marginTop: '16px' }}>
+                      Could not fetch budget data for <strong>{activeYear}</strong>. Showing sample values.
+                    </div>
+                  )}
+
+                  <div className="budget-grid">
+                    <div className="budget-card">
+                      <div className="budget-card-title">Year</div>
+                      <div className="budget-card-value">{display.year}</div>
+                    </div>
+                    <div className="budget-card">
+                      <div className="budget-card-title">Last Updated</div>
+                      <div className="budget-card-value">{display.last_updated ? new Date(display.last_updated).toLocaleString() : 'N/A'}</div>
+                    </div>
+                    <div className="budget-card">
+                      <div className="budget-card-title">Source</div>
+                      <div className="budget-card-value">{display.source || 'Government of India'}</div>
                     </div>
                   </div>
-                )}
 
-                {budgetData.highlights && budgetData.highlights.length > 0 && (
-                  <div style={{ marginTop: '26px' }}>
-                    <h3 className="section-title">Highlights</h3>
-                    <ul className="budget-highlights">
-                      {budgetData.highlights.map((h, idx) => (
-                        <li key={idx}>{h}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {budgetData.sector_allocations && Object.keys(budgetData.sector_allocations).length > 0 && (
-                  <div style={{ marginTop: '26px' }}>
-                    <h3 className="section-title">Sector Allocations</h3>
-                    <div className="budget-cards">
-                      {Object.entries(budgetData.sector_allocations).map(([sector, amount]) => (
-                        <div key={sector} className="budget-card">
-                          <div className="budget-card-title">{sector}</div>
-                          <div className="budget-card-value">{amount}</div>
-                        </div>
-                      ))}
+                  {display.key_figures && Object.keys(display.key_figures).length > 0 && (
+                    <div style={{ marginTop: '26px' }}>
+                      <h3 className="section-title">Key Figures</h3>
+                      <div className="budget-cards">
+                        {Object.entries(display.key_figures).map(([key, value]) => (
+                          <div key={key} className="budget-card">
+                            <div className="budget-card-title">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                            <div className="budget-card-value">{value}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {budgetData.tax_changes && budgetData.tax_changes.length > 0 && (
-                  <div style={{ marginTop: '26px' }}>
-                    <h3 className="section-title">Tax Changes</h3>
-                    <ul className="budget-highlights">
-                      {budgetData.tax_changes.map((t, idx) => (
-                        <li key={idx}>{t}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </>
-            )}
+                  {display.highlights && display.highlights.length > 0 && (
+                    <div style={{ marginTop: '26px' }}>
+                      <h3 className="section-title">Highlights</h3>
+                      <ul className="budget-highlights">
+                        {display.highlights.map((h, idx) => (
+                          <li key={idx}>{h}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {display.analysis && (
+                    <div style={{ marginTop: '26px' }}>
+                      <h3 className="section-title">Budget Analysis</h3>
+                      <div className="budget-analysis">
+                        <div className="analysis-card">
+                          <div className="analysis-title">Economic Impact</div>
+                          <div className="analysis-value">{display.analysis.economic_impact}</div>
+                        </div>
+                        <div className="analysis-card">
+                          <div className="analysis-title">Market Sentiment</div>
+                          <div className="analysis-value">{display.analysis.market_sentiment}</div>
+                        </div>
+                        <div className="analysis-card">
+                          <div className="analysis-title">Key Drivers</div>
+                          <ul className="analysis-list">
+                            {display.analysis.key_drivers.map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="analysis-card">
+                          <div className="analysis-title">Risks</div>
+                          <ul className="analysis-list">
+                            {display.analysis.risks.map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="analysis-card">
+                          <div className="analysis-title">Recommendations</div>
+                          <ul className="analysis-list">
+                            {display.analysis.recommendations.map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {display.sector_allocations && Object.keys(display.sector_allocations).length > 0 && (
+                    <div style={{ marginTop: '26px' }}>
+                      <h3 className="section-title">Sector Allocations</h3>
+                      <div className="budget-cards">
+                        {Object.entries(display.sector_allocations).map(([sector, amount]) => (
+                          <div key={sector} className="budget-card">
+                            <div className="budget-card-title">{sector}</div>
+                            <div className="budget-card-value">{amount}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {display.tax_changes && display.tax_changes.length > 0 && (
+                    <div style={{ marginTop: '26px' }}>
+                      <h3 className="section-title">Tax Changes</h3>
+                      <ul className="budget-highlights">
+                        {display.tax_changes.map((t, idx) => (
+                          <li key={idx}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         );
+      }
 
       default:
         return null;

@@ -812,3 +812,40 @@
     font-size: 2rem;
   }
 }
+
+/* Budget Analysis Section */
+.budget-analysis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.analysis-card {
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analysis-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #d1d4dc;
+}
+
+.analysis-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.analysis-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 0;
+  color: #c1c6d0;
+}

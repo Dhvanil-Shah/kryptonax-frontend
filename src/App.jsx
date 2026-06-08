@@ -939,9 +939,178 @@ const toggleNotification = async (t) => {
       {showAboutModal && ( <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000 }}> <div style={{ backgroundColor: "#1e222d", padding: "50px", borderRadius: "12px", border: "1px solid #2a2e39", width: "700px", color: "#d1d4dc", position: "relative" }}> <button onClick={() => setShowAboutModal(false)} style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", color: "white", fontSize: "24px", cursor: "pointer" }}>✕</button> <h1 style={{ color: "#2962ff", textAlign: "center", marginBottom: "30px" }}>About Kryptonax</h1> <p style={{ lineHeight: "1.6", color: "#a1a1a1" }}> Kryptonax was built to democratize financial intelligence. </p> </div> </div> )}
 
       {view === "about" ? (
-        <div style={{ flex: 1, color: "#d1d4dc", paddingBottom: "60px", textAlign: "center", padding: "80px 20px" }}>
-            <h1 style={{ fontSize: "48px", marginBottom: "20px", color: "white" }}>Empowering Your <span style={{color: "#2962ff"}}>Financial Future</span></h1>
-            <button onClick={() => setView("dashboard")} style={{ marginTop: "30px", padding: "12px 30px", background: "#2962ff", color: "white", border: "none", borderRadius: "4px", fontSize: "16px", cursor: "pointer", fontWeight: "bold" }}>Start Analyzing</button>
+        <div style={{ flex: 1, color: "#d1d4dc", paddingBottom: "60px", minHeight: "100vh", backgroundColor: "#131722" }}>
+          {/* Hero Section */}
+          <div style={{ background: "linear-gradient(135deg, #1a1f2e 0%, #0f4c6f 100%)", padding: "80px 40px", textAlign: "center", borderBottom: "1px solid #2a2e39" }}>
+            <h1 style={{ fontSize: "56px", marginBottom: "20px", color: "white", fontWeight: "bold" }}>
+              Empowering Your <span style={{color: "#2962ff"}}>Financial Future</span>
+            </h1>
+            <p style={{ fontSize: "18px", color: "#a1a1a1", marginBottom: "30px", maxWidth: "700px", margin: "0 auto 30px" }}>
+              Kryptonax democratizes financial intelligence with real-time market data, AI-powered analysis, and comprehensive insights for informed investment decisions.
+            </p>
+          </div>
+
+          {/* Main Content */}
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px 40px" }}>
+            {/* Mission Section */}
+            <div style={{ marginBottom: "80px" }}>
+              <h2 style={{ fontSize: "36px", color: "#2962ff", marginBottom: "30px", textAlign: "center" }}>🎯 Our Mission</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px", alignItems: "center" }}>
+                <div>
+                  <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#d1d4dc", marginBottom: "15px" }}>
+                    At Kryptonax, we believe financial intelligence should be accessible to everyone. Our platform combines cutting-edge technology with user-friendly design to provide:
+                  </p>
+                  <ul style={{ listStyle: "none", padding: 0 }}>
+                    <li style={{ fontSize: "15px", color: "#d1d4dc", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ color: "#00e676", fontSize: "20px" }}>✓</span> Real-time market data from multiple sources
+                    </li>
+                    <li style={{ fontSize: "15px", color: "#d1d4dc", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ color: "#00e676", fontSize: "20px" }}>✓</span> AI-powered sentiment analysis and predictions
+                    </li>
+                    <li style={{ fontSize: "15px", color: "#d1d4dc", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ color: "#00e676", fontSize: "20px" }}>✓</span> Comprehensive technical analysis tools
+                    </li>
+                    <li style={{ fontSize: "15px", color: "#d1d4dc", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ color: "#00e676", fontSize: "20px" }}>✓</span> Global market coverage and regional filtering
+                    </li>
+                  </ul>
+                </div>
+                <div style={{ backgroundColor: "#1e222d", padding: "40px", borderRadius: "12px", border: "1px solid #2a2e39", textAlign: "center" }}>
+                  <div style={{ fontSize: "80px", marginBottom: "20px" }}>📊</div>
+                  <h3 style={{ color: "#2962ff", marginBottom: "15px", fontSize: "20px" }}>Financial Intelligence Platform</h3>
+                  <p style={{ color: "#787b86", fontSize: "14px" }}>Analyze markets like a professional with institutional-grade tools</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Section */}
+            <div style={{ marginBottom: "80px" }}>
+              <h2 style={{ fontSize: "36px", color: "#2962ff", marginBottom: "40px", textAlign: "center" }}>⭐ Key Features</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "30px" }}>
+                {[
+                  {
+                    icon: "📈",
+                    title: "Real-Time Quotes",
+                    desc: "Get live stock prices, crypto rates, and market indices updated every second across global exchanges."
+                  },
+                  {
+                    icon: "🤖",
+                    title: "AI Chatbot",
+                    desc: "Chat with our intelligent assistant about stocks, market trends, company news, and financial insights."
+                  },
+                  {
+                    icon: "📰",
+                    title: "Smart News",
+                    desc: "AI-analyzed financial news categorized by sentiment and region. Stay informed with curated market updates."
+                  },
+                  {
+                    icon: "🔬",
+                    title: "Technical Analysis",
+                    desc: "Advanced charting with candlesticks, moving averages, RSI, MACD, and 15-day predictive models."
+                  },
+                  {
+                    icon: "🌍",
+                    title: "Global Coverage",
+                    desc: "Monitor markets across India, USA, UK, Japan, China, and more with region-specific filtering."
+                  },
+                  {
+                    icon: "⭐",
+                    title: "Personal Watchlist",
+                    desc: "Save your favorite stocks and securities. Track portfolios and get personalized market insights."
+                  }
+                ].map((feature, i) => (
+                  <div key={i} style={{ backgroundColor: "#1e222d", padding: "30px", borderRadius: "12px", border: "1px solid #2a2e39", transition: "all 0.3s", cursor: "pointer" }} onMouseEnter={(e) => {e.currentTarget.style.borderColor = "#2962ff"; e.currentTarget.style.boxShadow = "0 0 20px rgba(41, 98, 255, 0.2)"}} onMouseLeave={(e) => {e.currentTarget.style.borderColor = "#2a2e39"; e.currentTarget.style.boxShadow = "none"}}>
+                    <div style={{ fontSize: "40px", marginBottom: "15px" }}>{feature.icon}</div>
+                    <h3 style={{ color: "#2962ff", marginBottom: "10px", fontSize: "18px" }}>{feature.title}</h3>
+                    <p style={{ color: "#787b86", fontSize: "14px", lineHeight: "1.6" }}>{feature.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Supported Markets */}
+            <div style={{ marginBottom: "80px" }}>
+              <h2 style={{ fontSize: "36px", color: "#2962ff", marginBottom: "40px", textAlign: "center" }}>🌐 Global Market Coverage</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+                {[
+                  { flag: "🇮🇳", name: "India", desc: "NSE, BSE - 5000+ stocks" },
+                  { flag: "🇺🇸", name: "USA", desc: "NYSE, NASDAQ - 10000+ stocks" },
+                  { flag: "🇬🇧", name: "UK", desc: "LSE - 2000+ securities" },
+                  { flag: "🇯🇵", name: "Japan", desc: "TSE - 3500+ stocks" },
+                  { flag: "🇨🇳", name: "China", desc: "ADRs and international listings" },
+                  { flag: "₿", name: "Crypto", desc: "Bitcoin, Ethereum, and 1000+ coins" }
+                ].map((market, i) => (
+                  <div key={i} style={{ backgroundColor: "#1e222d", padding: "25px", borderRadius: "12px", border: "1px solid #2a2e39", textAlign: "center" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "10px" }}>{market.flag}</div>
+                    <h4 style={{ color: "#2962ff", marginBottom: "8px", fontSize: "16px" }}>{market.name}</h4>
+                    <p style={{ color: "#787b86", fontSize: "13px" }}>{market.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div style={{ marginBottom: "80px" }}>
+              <h2 style={{ fontSize: "36px", color: "#2962ff", marginBottom: "40px", textAlign: "center" }}>🚀 How It Works</h2>
+              <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+                {[
+                  { num: "1", title: "Search", desc: "Enter any stock ticker, crypto symbol, or company name" },
+                  { num: "2", title: "Analyze", desc: "View real-time quotes, charts, technical indicators, and AI predictions" },
+                  { num: "3", title: "Discover", desc: "Read AI-analyzed news, check top movers, and compare with other securities" },
+                  { num: "4", title: "Invest", desc: "Make informed decisions with comprehensive market intelligence" }
+                ].map((step, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", marginBottom: "30px", gap: "20px" }}>
+                    <div style={{ 
+                      width: "50px", 
+                      height: "50px", 
+                      borderRadius: "50%", 
+                      backgroundColor: "#2962ff", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "center", 
+                      color: "white", 
+                      fontWeight: "bold",
+                      fontSize: "24px",
+                      flexShrink: 0
+                    }}>
+                      {step.num}
+                    </div>
+                    <div>
+                      <h4 style={{ color: "#2962ff", marginBottom: "8px", fontSize: "18px", fontWeight: "bold" }}>{step.title}</h4>
+                      <p style={{ color: "#787b86", fontSize: "15px", margin: 0 }}>{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats Section */}
+            <div style={{ backgroundColor: "#1e222d", padding: "60px 40px", borderRadius: "12px", border: "1px solid #2a2e39", marginBottom: "80px" }}>
+              <h2 style={{ fontSize: "36px", color: "#2962ff", marginBottom: "50px", textAlign: "center" }}>📊 By The Numbers</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "30px", textAlign: "center" }}>
+                {[
+                  { num: "50K+", label: "Active Users" },
+                  { num: "20K+", label: "Stocks Tracked" },
+                  { num: "100+", label: "Countries" },
+                  { num: "24/7", label: "Market Coverage" }
+                ].map((stat, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: "36px", fontWeight: "bold", color: "#2962ff", marginBottom: "10px" }}>{stat.num}</div>
+                    <div style={{ color: "#787b86", fontSize: "15px" }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA Section */}
+            <div style={{ textAlign: "center", padding: "60px 20px", backgroundColor: "linear-gradient(135deg, #1a1f2e 0%, #0f4c6f 100%)", borderRadius: "12px" }}>
+              <h2 style={{ fontSize: "36px", color: "white", marginBottom: "20px" }}>Ready to Master the Markets?</h2>
+              <p style={{ fontSize: "16px", color: "#a1a1a1", marginBottom: "30px" }}>Start analyzing stocks with Kryptonax today. No credit card required.</p>
+              <button onClick={() => setView("dashboard")} style={{ marginTop: "20px", padding: "15px 40px", background: "#2962ff", color: "white", border: "none", borderRadius: "8px", fontSize: "16px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1e53e5"} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2962ff"}>
+                Start Analyzing Now →
+              </button>
+            </div>
+          </div>
         </div>
       ) : fullPageNewsView ? (
         <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "40px 20px", minHeight: "calc(100vh - 200px)" }}>
