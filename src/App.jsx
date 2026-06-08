@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, 
   CartesianGrid, ResponsiveContainer, ComposedChart, Line, Bar, Brush, ReferenceLine 
@@ -422,6 +422,8 @@ function App() {
   const [fullPageNewsView, setFullPageNewsView] = useState(false);
   const [newsReaderRegions, setNewsReaderRegions] = useState(['all']);
   const [newsReaderStates, setNewsReaderStates] = useState({});
+  const [showKryptonIBeta, setShowKryptonIBeta] = useState(false);
+  const betaRef = useRef(null);
 
   const COLORS = ['#00e676', '#ff1744', '#651fff']; 
 
@@ -892,6 +894,7 @@ const toggleNotification = async (t) => {
           {fullPageNewsView && <button onClick={() => { setView("dashboard"); setFullPageNewsView(false); handleReset(); }} style={{ fontSize: "14px", padding: "8px 16px", backgroundColor: "#2a2e39", border: "1px solid #787b86", color: "#d1d4dc", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.3s" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2962ff"; e.currentTarget.style.borderColor = "#2962ff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#2a2e39"; e.currentTarget.style.borderColor = "#787b86"; }}>🏠 Home</button>}
           <span onClick={() => { setFullPageNewsView(true); setView("dashboard"); setCurrentNewsIndex(0); }} style={{cursor: "pointer", color: fullPageNewsView ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px"}}>📰 Read Top Trending News</span>
           <span onClick={() => setShowChatBot(true)} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px"}}>💬 Chat with Bot</span>
+          <span onClick={() => { setView("dashboard"); setFullPageNewsView(false); setTimeout(() => betaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }} style={{cursor: "pointer", color: "#d1d4dc", fontWeight: "bold", transition: "0.2s", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px"}}>🚀 Krypton I Beta</span>
           <span onClick={() => { setView("about"); setFullPageNewsView(false); }} style={{cursor: "pointer", color: view === "about" ? "#2962ff" : "#d1d4dc", fontWeight: "bold", transition: "0.2s"}}>About Us</span>
           {userName && <span style={{color: "#00e676", fontWeight: "bold"}}>Hi, {userName}</span>}
           {token ? ( <button onClick={logout} style={{ background: "#ff1744", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Logout</button> ) : ( <button onClick={() => setShowAuthModal(true)} style={{ background: "#2962ff", color: "white", padding: "8px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Login / Sign Up</button> )}</div>
@@ -937,6 +940,42 @@ const toggleNotification = async (t) => {
       )}
 
       {showAboutModal && ( <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000 }}> <div style={{ backgroundColor: "#1e222d", padding: "50px", borderRadius: "12px", border: "1px solid #2a2e39", width: "700px", color: "#d1d4dc", position: "relative" }}> <button onClick={() => setShowAboutModal(false)} style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", color: "white", fontSize: "24px", cursor: "pointer" }}>✕</button> <h1 style={{ color: "#2962ff", textAlign: "center", marginBottom: "30px" }}>About Kryptonax</h1> <p style={{ lineHeight: "1.6", color: "#a1a1a1" }}> Kryptonax was built to democratize financial intelligence. </p> </div> </div> )}
+      {showKryptonIBeta && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100, padding: '20px' }} onClick={() => setShowKryptonIBeta(false)}>
+          <div style={{ width: '100%', maxWidth: '720px', backgroundColor: '#131722', borderRadius: '20px', border: '1px solid rgba(41,98,255,0.3)', boxShadow: '0 25px 60px rgba(0,0,0,0.35)', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '32px 32px 24px', background: 'linear-gradient(135deg, #0d1a34, #142340)', borderBottom: '1px solid rgba(79,172,254,0.2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: '#00b4db', textTransform: 'uppercase', fontWeight: '700', marginBottom: '10px' }}>Krypton I Beta</div>
+                  <h2 style={{ margin: 0, fontSize: '28px', color: '#ffffff' }}>Investor Intelligence for your pitch</h2>
+                </div>
+                <button onClick={() => setShowKryptonIBeta(false)} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>✕</button>
+              </div>
+            </div>
+            <div style={{ padding: '30px 32px', color: '#d1d4dc' }}>
+              <p style={{ margin: '0 0 20px', lineHeight: '1.8', color: '#b8c7ff' }}>
+                Krypton I is a preview of a new AI-powered investor intelligence layer inside Kryptonax. It helps you turn market data into pitch-ready stories, sector themes, and smart investment ideas.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                {[
+                  { label: 'Pitch Summary', value: 'One-click investor briefs for any ticker' },
+                  { label: 'Opportunity Radar', value: 'Highlight top sector and momentum themes' },
+                  { label: 'AI Score', value: 'Signal strength based on news, technicals, and sentiment' },
+                  { label: 'Action Plan', value: 'Suggested next steps for watchlists and trade ideas' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ background: '#0f1726', border: '1px solid rgba(79,172,254,0.15)', borderRadius: '16px', padding: '18px' }}>
+                    <div style={{ color: '#4fc3f7', fontWeight: '700', marginBottom: '8px' }}>{item.label}</div>
+                    <div style={{ color: '#a1b2ff', fontSize: '14px' }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => { setShowKryptonIBeta(false); setTicker('AAPL'); handleSearch('AAPL'); }} style={{ padding: '14px 24px', background: '#2962ff', color: '#fff', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}>
+                Try Krypton I with AAPL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {view === "about" ? (
         <div style={{ flex: 1, color: "#d1d4dc", paddingBottom: "60px", minHeight: "100vh", backgroundColor: "#131722" }}>
@@ -1660,6 +1699,34 @@ const toggleNotification = async (t) => {
                         handleSearch(symbol);
                     }} 
                 />
+
+                <div ref={betaRef} style={{ margin: '30px 0', padding: '30px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(41,98,255,0.15), rgba(9,19,38,1))', border: '1px solid rgba(41,98,255,0.25)', boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1040px', margin: '0 auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '14px', color: '#00b4db', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>New Beta</span>
+                      <h2 style={{ margin: 0, color: '#ffffff', fontSize: '32px' }}>Krypton I Beta</h2>
+                    </div>
+                    <p style={{ margin: 0, color: '#cfd8fc', fontSize: '16px', maxWidth: '860px', lineHeight: '1.8' }}>
+                      Krypton I is the next-generation investor intelligence experience for Kryptonax. It combines smart market signals, pitch-ready insights, and AI-assisted idea discovery in one beta preview.
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
+                      {[
+                        { title: 'AI Signal Engine', desc: 'Smart bullish and bearish signals based on sentiment, momentum, and chart patterns.' },
+                        { title: 'Pitch-Ready Insights', desc: 'Instant summaries and investor-friendly talking points for any stock.' },
+                        { title: 'Portfolio Ideas', desc: 'Curated market themes and watchlist-ready opportunities for the next move.' }
+                      ].map((item, idx) => (
+                        <div key={idx} style={{ background: '#111827', border: '1px solid rgba(79, 172, 254, 0.18)', borderRadius: '16px', padding: '22px', minHeight: '140px' }}>
+                          <h4 style={{ color: '#4FC3F7', marginBottom: '10px', fontSize: '18px' }}>{item.title}</h4>
+                          <p style={{ margin: 0, color: '#b8c7ff', fontSize: '14px', lineHeight: '1.7' }}>{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                      <button onClick={() => setShowKryptonIBeta(true)} style={{ padding: '14px 26px', background: '#2962ff', color: '#ffffff', border: 'none', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>Explore Krypton I Beta</button>
+                      <button onClick={() => setTicker('AAPL') || handleSearch('AAPL')} style={{ padding: '14px 26px', background: 'rgba(255,255,255,0.08)', color: '#d1d4dc', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '28px', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>Demo with AAPL</button>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Market Dashboard - Shown on homepage only */}
                 {!searchedTicker && (
