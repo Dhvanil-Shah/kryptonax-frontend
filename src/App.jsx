@@ -1976,6 +1976,30 @@ const toggleNotification = async (t) => {
                                             </div>
                                         </div>
                                      )}
+
+                                     {advisorReport && (
+                                        <div style={{ marginTop: '20px', backgroundColor: '#111827', border: '1px solid rgba(41,98,255,0.18)', borderRadius: '16px', padding: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
+                                          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                                            <div>
+                                              <h3 style={{ margin: 0, color: '#ffffff', fontSize: '20px' }}>{advisorReport.headline}</h3>
+                                              <p style={{ margin: '10px 0 0', color: '#b8c7ff', fontSize: '14px', lineHeight: '1.7' }}>{advisorReport.summary}</p>
+                                            </div>
+                                            <button onClick={() => setShowChatBot(true)} style={{ padding: '12px 18px', borderRadius: '14px', border: 'none', background: '#2962ff', color: '#ffffff', fontWeight: '700', cursor: 'pointer' }}>Ask Krypton Advisor</button>
+                                          </div>
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginTop: '18px' }}>
+                                            {advisorReport.details.map((item, idx) => (
+                                              <div key={idx} style={{ backgroundColor: '#161c2f', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                <span style={{ color: '#a1a9d6', fontSize: '12px' }}>{item}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                          <div style={{ marginTop: '18px', display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                            <div style={{ color: '#d1d4dc', fontSize: '14px' }}><strong>Recommendation:</strong> {advisorReport.recommendation}</div>
+                                            <div style={{ color: '#d1d4dc', fontSize: '14px' }}><strong>Next Step:</strong> {advisorReport.nextStep}</div>
+                                            <div style={{ color: '#b8c7ff', fontSize: '13px' }}><strong>Focus Guidance:</strong> {advisorReport.interestGuidance}</div>
+                                          </div>
+                                        </div>
+                                     )}
                                 </div>
                             </div>
 
@@ -2173,6 +2197,7 @@ const toggleNotification = async (t) => {
         onClose={() => setShowChatBot(false)}
         apiBaseUrl={API_BASE_URL}
         ticker={searchedTicker}
+        interest={kryptonInterest}
       />
 
       {/* --- NEWS READER MODAL --- */}

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null }) => {
+const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null, interest = null }) => {
+  const initialMessage = `👋 Hi! I'm your Kryptonax AI Assistant. I can help you discuss company news, board members, market trends, and financial insights. ${ticker ? `I see you're interested in ${ticker}.` : "What would you like to know?"} ${interest ? `I'm ready to help with your ${interest} investment focus.` : "Tell me what kind of financial advice you need."}`;
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      message: `👋 Hi! I'm your Kryptonax AI Assistant. I can help you discuss company news, board members, market trends, and financial insights. ${ticker ? `I see you're interested in ${ticker} - feel free to ask me anything about it!` : "What would you like to know?"}`
+      message: initialMessage
     }
   ]);
   const [logoError, setLogoError] = useState(false);
@@ -19,6 +20,12 @@ const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 1 && messages[0].role === 'bot') {
+      setMessages([{ role: 'bot', message: initialMessage }]);
+    }
+  }, [isOpen, ticker, interest]);
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -44,6 +51,7 @@ const ChatBot = ({ isOpen, onClose, apiBaseUrl, ticker = null }) => {
         body: JSON.stringify({
           user_message: input,
           ticker: ticker,
+          interest: interest,
           history: chatHistory.slice(-10) // Keep last 10 messages for context
         })
       });
